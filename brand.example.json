@@ -1,0 +1,45 @@
+{
+  "_about": "A filled-in brand.json, to read beside the real one. `engine init --from brand.example.json` would set a clone up from it with no questions; `engine validate` names the key and the fix for anything wrong. Every key is explained by the `_about` beside it; keys starting with `_` are notes and are ignored.",
+  "_brand_about": "slug: lower-case, a letter first, 2 to 24 characters. It becomes the root stream, the launchd label prefix (com.<slug>), the environment prefix (<SLUG>_) and the keychain service (<slug>-comms); name any of label_prefix, env_prefix or keychain_service here only to override it.",
+  "brand": {"slug": "acme", "name": "Acme"},
+  "_engine_about": "The comms-engine plugin version this brand runs. `engine doctor` fails when the loaded plugin is another; move it after reading the release, as a tracked change.",
+  "engine": {"version": "1.0.0"},
+  "streams": {
+    "acme": {
+      "name": "Acme",
+      "_narrator_about": "The one register this stream speaks in. Two narrators are two streams.",
+      "narrator": "an authority on its category",
+      "_owner_about": "confirmed or unset, never a name. Confirmed on a decision file under .atelier/memory/decisions/.",
+      "owner": "confirmed",
+      "objectives": "intent engagement (saves, quote posts, substantive replies, reposts, link clicks); reach: not opted in",
+      "_autopilot_about": "nothing: drafts only, nothing leaves. by switch: each kind of send follows its review mode below. Set once by a person at onboarding.",
+      "autopilot": "by switch",
+      "_channels_about": "The stream's own handles, by channel: x, linkedin, telegram, discord, website.",
+      "channels": {"x": "@acme", "linkedin": "linkedin.com/company/acme", "website": "acme.example"},
+      "_review_about": "The default mode per kind of send: review (waits for a person) or auto (what passes the automatic checks goes out, what fails stays in the queue). A kind left out is review. `hold` is the statistics, partner and certification class. A kind may also be set per channel: {\"like\": {\"x\": \"review\", \"linkedin\": \"auto\"}}. Write the mode in quotes.",
+      "review": {"post": "review", "reply": "review", "comment": "review", "like": "auto", "repost": "auto", "quote": "review", "hold": "review"},
+      "_drafts_only_about": "all, none, or the channels that never send: [\"Blog\"].",
+      "drafts_only": "none",
+      "posts_per_day": {"x": 2, "linkedin": 1, "blog_per_week": 2, "blog_days_apart": 3},
+      "_reactions_per_day_about": "The most likes, reposts and quotes a day per channel. 0 or a kind left out sends none.",
+      "reactions_per_day": {"x": {"like": 20, "repost": 3}, "linkedin": {"like": 10, "repost": 2}},
+      "_quiet_hours_about": "When nothing is sent, judged in the timezone of `engine setup autopilot`: weekends; before HH:MM and after HH:MM. `all hours until onboarded` blocks every send.",
+      "quiet_hours": "weekends; before 08:00 and after 18:00",
+      "blocked_topics": "pricing; anything on the stealth denylist",
+      "hold_for_review": "statistics not in claims.md; a named counterparty not on the cleared list; any certification word",
+      "corpus_status": "candidate",
+      "_pair_rules_about": "A stream names another only under a rule here: [{\"to\": \"<stream>\", \"rule\": \"the words the gate holds a line to\", \"basis\": \"the decision\"}].",
+      "pair_rules": []
+    }
+  },
+  "_drivers_about": "write: native or composio. x_read and x_own: twitterapi or composio.",
+  "drivers": {"write": "composio", "x_read": "twitterapi", "x_own": "twitterapi"},
+  "_jobs_about": "true runs the job with the rest; false leaves it out of the all-jobs install.",
+  "jobs": {
+    "corpus-cycle": true, "social-engine": true, "autopilot": true, "engagement": true, "score": true,
+    "claims-check": true, "nosleep": true, "x-stream": false, "x-poll": false, "inbound": true,
+    "control": false, "backup": false
+  },
+  "_plugins_about": "role: {use: \"<plugin>:<agent or skill>\", kind: agent or skill, version: the pinned plugin version, brief: the file under the engine's briefs/ that carries this repository's rules, fallback: what runs when the plugin is not installed}. Leave roles empty to keep engine.json's defaults.",
+  "plugins": {"roles": {}}
+}

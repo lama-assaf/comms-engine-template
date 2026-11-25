@@ -1,0 +1,26 @@
+{
+ "_about": "Recorded SHAPES of two read-only Composio replies, from a live check on 2026-11-11 through channels._execute. Every value is a placeholder: key names, nesting and types are real, no account text, id, name, handle, url or token is kept.",
+ "TWITTER_USER_LOOKUP_ME": {
+  "data": {"data": {"id": "1000000000000000000", "name": "Example Account", "username": "example_account"}},
+  "successful": true,
+  "error": null,
+  "log_id": "log_example"
+ },
+ "LINKEDIN_GET_MY_INFO": {
+  "data": {
+   "firstName": {"localized": {"en_US": "Example"}, "preferredLocale": {"country": "US", "language": "en"}},
+   "headline": {"localized": {"en_US": "Example headline"}, "preferredLocale": {"country": "US", "language": "en"}},
+   "id": "exampleMemberId",
+   "lastName": {"localized": {"en_US": "Account"}, "preferredLocale": {"country": "US", "language": "en"}},
+   "localizedFirstName": "Example",
+   "localizedHeadline": "Example headline",
+   "localizedLastName": "Account",
+   "profilePicture": {"displayImage": "urn:li:digitalmediaAsset:example"},
+   "profileUrl": "https://www.linkedin.com/in/example",
+   "vanityName": "example"
+  },
+  "successful": true,
+  "error": null,
+  "log_id": "log_example"
+ }
+}

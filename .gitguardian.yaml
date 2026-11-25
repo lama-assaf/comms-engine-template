@@ -1,0 +1,6 @@
+# ggshield: findings reviewed and recorded as not secrets, by the hash of the match only
+secret:
+  ignored_matches:
+  - match: e8b565b6559b25a6d77949a3f9cf8b49effedd3929034556e14cafe384708287
+    name: 'test fixture, not a credential: the placeholder token test_config.py feeds config.show to prove it is masked'
+version: 2

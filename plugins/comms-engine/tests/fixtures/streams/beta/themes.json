@@ -1,0 +1,7 @@
+{
+  "_about": "Engine-local search material for the Beta stream: per theme one X advanced-search term, one LinkedIn search-bar string and one keyword set. Empty until the stream's themes.md has rows; a term with no theme row, or a theme row with no term, is an error. A fixture, written 2026-11-05.",
+  "_source_of_truth": ".atelier/memory/streams/beta/themes.md",
+  "search_terms": {},
+  "mentions": {},
+  "_term_log": []
+}

@@ -1,0 +1,24 @@
+{
+  "name": "comms-engine-setup",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Set up the comms engine on a Mac and run it from one terminal menu: npx github:lama-assaf/comms-engine-template",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "comms-engine-setup": "cli/setup.mjs"
+  },
+  "files": [
+    "cli/*.mjs",
+    "requirements.txt"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test \"cli/test/*.test.mjs\""
+  },
+  "commsEngine": {
+    "marketplace": "lama-assaf/comms-engine-template"
+  }
+}

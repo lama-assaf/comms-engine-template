@@ -1,0 +1,30 @@
+{
+  "_about": "Engine-local search material only: per theme one X advanced-search term, one LinkedIn search-bar string and one keyword set, which no other runtime needs. The two search strings are not interchangeable - X operators (OR, lang:en, -filter:replies, negated words) mean nothing to LinkedIn search, so each theme carries its own. LinkedIn is only read when listen.py is called with --linkedin; a default pass makes no LinkedIn call and spends nothing there. Everything else a theme carries - what it is, why it is different, the fact it links back to, cleared partner tags, intro-post state, layer, licence, logics and licence basis - is read from .atelier/memory/themes.md, and every handle and cleared name from .atelier/memory/handles.md. scripts/memory.py is this engine's read path into them; the roster of themes comes from themes.md and is joined to the terms below by tag, so a term with no theme row (or a theme row with no term) is an error, not a silent skip. Empty until themes.md has rows: add one entry per hashtag, keyed by the hashtag, with x_search, linkedin_search and keywords.",
+  "_source_of_truth": {
+    "themes": ".atelier/memory/themes.md",
+    "handles": ".atelier/memory/handles.md",
+    "handles_private": ".atelier/memory/handles.private.md",
+    "_note": "The stealth denylist lives in .atelier/memory/handles.private.md. That file is gitignored and is merged on top of .atelier/memory/handles.md at read time; it carries the denylist terms plus the stealth and unsigned-draft parties. No copy lives in this repository's committed files. gate_lint blocks, never passes, when the companion is expected and absent."
+  },
+  "_shape": {
+    "#ExampleTheme": {
+      "x_search": "an X advanced-search term of at most 255 characters, registered verbatim as a twitterapi.io filter rule by scripts/x_stream.py",
+      "linkedin_search": "a LinkedIn search-bar string, no operators",
+      "keywords": ["lowercase", "substrings", "that mark a result as on-theme"]
+    }
+  },
+  "search_terms": {},
+  "mentions": {
+    "_about": "Brand and adjacency mentions. Not a theme; feeds interaction proposals and the engager ledger. Empty x_search means no mentions pass is run.",
+    "x_search": "",
+    "linkedin_search": "",
+    "keywords": []
+  },
+  "ignore": {
+    "_about": "Another stream's chatter. Listening drops any result whose text names one of these, in listen.py and in the stream (x_stream.py); the mentions term also excludes them at the source. The theme terms carry no exclusion, since the stream registers each verbatim and several may sit near the 255-character cap.",
+    "keywords": []
+  },
+  "_term_log": [
+    "2026-11-05 - template: no terms. Every x_search stays at or under 255 characters: scripts/x_stream.py registers each one verbatim as a twitterapi.io filter rule, whose value is capped at 255."
+  ]
+}

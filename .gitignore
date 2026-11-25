@@ -1,0 +1,110 @@
+# ── Obsidian per-machine state (causes sync conflicts — never commit) ──
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.obsidian/*.log
+
+# ── OS / editor cruft ──
+.DS_Store
+Thumbs.db
+
+# ── Obsidian trash ──
+.trash/
+
+# ── Agent / tooling scratch (local only) ──
+.gg/
+.playwright-mcp/
+.remember/
+.agents/
+skills-lock.json
+
+# ── .claude/: only the project's settings are tracked (the plugin enablement, the deny
+# list, the MCP approval), so a fresh clone works with plain `claude`. The engine's agents,
+# skills, commands and hooks come from the comms-engine plugin, not from files here; the
+# per-machine files (settings.local.json, the session marker) stay out.
+.claude/*
+!.claude/settings.json
+
+# ── Research briefs: internal-only source syntheses ──
+# The corpus cycle (/corpus-analyse) writes its briefs and the sweep's manifest
+# here, in full detail from the business's own strategy documents. A brief can
+# name a stealth party or an unsigned term, so the folder stays out of git by
+# default; delete this rule deliberately if a private repository is the right home.
+Docs/Research/
+
+# ── atelier project memory: COMMITTED on purpose ──
+# The distilled learnings (status, logics, instincts, registers) are shared with
+# the team. Anything else atelier writes under .atelier/ stays local.
+.atelier/*
+!.atelier/memory/
+
+# ── Python bytecode ──
+__pycache__/
+*.pyc
+
+# the instance's per-machine overrides of the engine's engine.json and brand.json (corpus root,
+# budgets, the host's role map); the tracked files hold the defaults
+/engine.local.json
+# social engine: no script reads this file any more; it stays ignored so an old copy, which
+# held a business's calendar ids, is never committed
+/publish-targets.json
+# the built dashboard inlines the brand's state (build_dashboard.py rebuilds it from the
+# engine's dashboard/template.html on every cycle); only the template is source
+/state/dashboard.html
+plugins/comms-engine/dashboard/index.html
+
+# social engine: raw scrapes and per-run listening files are audit trail, not source
+/state/raw/
+/state/listening-*.json
+/state/schedule.log
+# the twitterapi.io stream: matched posts, listener heartbeat and log (scripts/x_stream.py)
+/state/x-stream/
+
+# ── Social-engine desk (Next.js + Drizzle over state/desk.db) ──
+# The database is a derived index and a decision store: `desk_sync.py --push`
+# rebuilds the mirror from the Content/Calendar notes, and `--pull` carries
+# the person's acts out to state/*.json and .atelier/memory/reviews.md before
+# anything else reads them. Nothing in it is a record, so none of it is
+# committed — but it does hold decisions until they are pulled, which is why
+# `--pull` is the first step of every cycle rather than an afterthought.
+/state/desk.db
+/state/desk.db-journal
+/state/desk.db-wal
+/state/desk.db-shm
+Tooling/desk/node_modules/
+Tooling/desk/.next/
+Tooling/desk/next-env.d.ts
+Tooling/desk/tsconfig.tsbuildinfo
+
+# the autopilot's own log and state
+/state/autopilot.log
+/state/autopilot-state.json
+
+# ── editor swap files ──
+*.swp
+
+# the maintainer's leak-terms file (tests/test_fresh_clone.py): the previous brand's
+# terms, kept locally so the template never carries them
+.leak-terms
+
+# motion cards (scripts/motion.py): the storyboard is the record and is tracked;
+# the renders beside it are rebuilt from it
+Content/Motion/**/*.mp4
+Content/Motion/**/*.gif
+Content/Motion/**/*-poster.png
+# films (the Motion plugin, /motion <id> --film): the project under videos/projects/<id>/ is
+# the record and is tracked; its renders are rebuilt from it
+videos/finals/
+
+# the local control page (scripts/control.py): its pid and log
+/state/control.pid
+/state/control.log
+
+# the control page web app (ui/): its packages; ui/dist is committed so a clone runs without Node
+plugins/comms-engine/ui/node_modules/
+
+# Added by ggshield
+.cache_ggshield
+
+# ggshield scan cache
+.cache_ggshield

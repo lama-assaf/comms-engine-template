@@ -1,0 +1,22 @@
+# The research store's database (plan v2, A16): FalkorDB, open source, local
+# until a host is named. Graphiti writes episodes into it; nothing else does.
+#
+#   docker compose -f research-store/docker-compose.yml up -d
+#   docker compose -f research-store/docker-compose.yml down
+#
+# Data persists in the named volume; the browser UI is on http://localhost:3000.
+# Both ports are published on 127.0.0.1 only: FalkorDB runs here without a password,
+# and a bare "6379:6379" would offer it to every machine on the network.
+services:
+  falkordb:
+    # pinned: `latest` was this image on 2026-11-13; a newer one is a change someone chooses
+    image: falkordb/falkordb:6.0.4
+    container_name: comms-research-store
+    ports:
+      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - research-store-data:/data
+    restart: unless-stopped
+volumes:
+  research-store-data:

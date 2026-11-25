@@ -1,0 +1,14 @@
+{
+  "name": "comms-engine",
+  "description": "The comms engine, from the repository that develops it. An instance repository enables comms-engine@comms-engine and pins its version in brand.json (engine.version).",
+  "owner": {
+    "name": "comms-engine maintainers"
+  },
+  "plugins": [
+    {
+      "name": "comms-engine",
+      "source": "./plugins/comms-engine",
+      "description": "The engine: agents, skills, commands, hooks, the scripts and the `engine` command"
+    }
+  ]
+}

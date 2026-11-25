@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engine control</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect x=%222%22 y=%222%22 width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%232a5bd7%22/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f7f7f5; --surface: #ffffff; --raised: #fbfbfa; --ink: #0b0b0b; --ink-2: #4b4b47; --muted: #77776f;
+  --line: #e1e0d9; --line-2: #ecebe6; --accent: var(--b-primary, #2a5bd7); --accent-soft: var(--b-tint, #e8eefc); --accent-ink: var(--b-primary, #1d47b3);
+  --good: #0ca30c; --good-ink: #006300; --good-soft: #e3f4e3; --warning: #fab219; --warning-ink: #7a5300; --warning-soft: #fdf1d6;
+  --critical: #d03b3b; --critical-ink: #a42a2a; --critical-soft: #f9e2e2; --chip: #efeee9; --empty: #ecebe6;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace; --shadow: 0 1px 2px rgba(11,11,11,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f0f0e; --surface: #181816; --raised: #1d1d1b; --ink: #f2f1ec; --ink-2: #c9c8c0; --muted: #94938b;
+    --line: #2c2c2a; --line-2: #252523; --accent: var(--b-accent, #7aa2ff); --accent-soft: #1c2742; --accent-ink: var(--b-accent, #a9c1ff);
+    --good-ink: #0ca30c; --good-soft: #142a14; --warning-ink: #fab219; --warning-soft: #33280f;
+    --critical-ink: #ef7d7d; --critical-soft: #3a1b1b; --chip: #262624; --empty: #262624; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f0f0e; --surface: #181816; --raised: #1d1d1b; --ink: #f2f1ec; --ink-2: #c9c8c0; --muted: #94938b;
+  --line: #2c2c2a; --line-2: #252523; --accent: var(--b-accent, #7aa2ff); --accent-soft: #1c2742; --accent-ink: var(--b-accent, #a9c1ff);
+  --good-ink: #0ca30c; --good-soft: #142a14; --warning-ink: #fab219; --warning-soft: #33280f;
+  --critical-ink: #ef7d7d; --critical-soft: #3a1b1b; --chip: #262624; --empty: #262624; --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.55 var(--b-font, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif); }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.ghost { border-color: transparent; background: none; color: var(--accent); padding: 3px 6px; }
+input, textarea, select { font: inherit; font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+textarea { width: 100%; font-family: var(--mono); font-size: 12.5px; min-height: 110px; resize: vertical; }
+input.wide { width: 100%; }
+.app { display: grid; grid-template-columns: 228px 1fr; min-height: 100vh; }
+aside.nav { position: sticky; top: 0; height: 100vh; padding: 18px 12px; border-right: 1px solid var(--line); background: var(--surface); overflow-y: auto; }
+.brand { font-weight: 650; font-size: 15px; padding: 0 10px; } .brand small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; margin-top: 2px; }
+.nav ul { list-style: none; padding: 0; margin: 18px 0 0; }
+.nav li button { width: 100%; text-align: left; border: 0; background: none; padding: 7px 10px; border-radius: 8px; display: flex; align-items: center; gap: 9px; color: var(--ink-2); font-size: 14px; }
+.nav li button .i { width: 20px; text-align: center; }
+.nav li button .n { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.nav li button:hover { background: var(--line-2); }
+.nav li button[aria-current="page"] { background: var(--accent-soft); color: var(--ink); font-weight: 600; }
+.nav .foot { margin-top: 18px; padding: 0 10px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+main { padding: 24px 30px 80px; min-width: 0; max-width: 1240px; }
+.head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.head h1 { font-size: 22px; margin: 0; font-weight: 650; }
+.head .meta { color: var(--muted); font-size: 13px; }
+.head .actions { margin-left: auto; }
+.about { background: var(--accent-soft); border-radius: 12px; padding: 12px 16px; margin: 0 0 18px; color: var(--ink); max-width: 900px; }
+.about p { margin: 0 0 6px; } .about p:last-child { margin-bottom: 0; }
+.about details { margin-top: 6px; } .about summary { cursor: pointer; color: var(--accent-ink); font-size: 13px; }
+.about dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 8px 0 2px; font-size: 13px; }
+.about dt { font-weight: 600; } .about dd { margin: 0; color: var(--ink-2); }
+h2 { font-size: 15px; font-weight: 650; margin: 28px 0 4px; display: flex; align-items: baseline; gap: 8px; }
+h2 .sub { color: var(--muted); font-weight: 400; font-size: 13px; }
+p.hint { color: var(--ink-2); font-size: 13px; margin: 0 0 10px; max-width: 820px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); }
+.cols { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; align-items: start; }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); cursor: pointer; text-align: left; min-width: 0; color: var(--ink); }
+.tile:hover { border-color: var(--muted); }
+.tile .label { color: var(--ink-2); font-size: 13px; }
+.tile .value { font-size: 30px; font-weight: 600; line-height: 1.15; margin-top: 4px; }
+.tile .value .of { color: var(--muted); font-size: 16px; font-weight: 500; }
+.tile .note { color: var(--muted); font-size: 12.5px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile.hero { grid-column: span 2; } .tile.hero .value { font-size: 54px; }
+.meter { height: 6px; border-radius: 3px; background: var(--accent-soft); margin-top: 8px; overflow: hidden; }
+.meter span { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+.strip { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; margin-top: 10px; }
+.strip .d { text-align: center; font-size: 10.5px; color: var(--muted); }
+.strip .b { height: 16px; border-radius: 4px; background: var(--empty); margin-bottom: 3px; }
+.strip .b.post { background: var(--accent); } .strip .b.warn { background: var(--warning); } .strip .b.stop { background: var(--critical); }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--ink-2); white-space: nowrap; }
+.chip.theme { background: var(--accent-soft); color: var(--accent-ink); }
+.chip.good { background: var(--good-soft); color: var(--good-ink); } .chip.warning { background: var(--warning-soft); color: var(--warning-ink); }
+.chip.critical { background: var(--critical-soft); color: var(--critical-ink); }
+.list { margin: 0; padding: 0; list-style: none; }
+.list li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line-2); }
+.list li:last-child { border-bottom: 0; }
+.list .when { color: var(--muted); font-size: 12.5px; min-width: 76px; font-variant-numeric: tabular-nums; padding-top: 1px; }
+.list .what { flex: 1; min-width: 0; }
+.list .go { white-space: nowrap; font-size: 12.5px; padding-top: 1px; }
+.excerpt { color: var(--ink-2); font-size: 12.5px; margin-top: 3px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; margin-top: 7px; background: var(--muted); }
+.dot.critical { background: var(--critical); } .dot.warning { background: var(--warning); } .dot.good { background: var(--good); } .dot.info { background: var(--accent); }
+.dt { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; margin-top: 8px; }
+.dt-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--raised); }
+.dt-bar input.dt-q { width: 220px; }
+.dt-bar .dt-count { margin-left: auto; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line-2); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); font-weight: 550; white-space: nowrap; user-select: none; }
+th.sortable { cursor: pointer; } th.sortable:hover { color: var(--ink); }
+th[aria-sort="ascending"]::after { content: " ↑"; } th[aria-sort="descending"]::after { content: " ↓"; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr.click { cursor: pointer; } tbody tr.click:hover td { background: var(--raised); }
+td.empty { color: var(--muted); text-align: center; padding: 22px; }
+tfoot td { background: var(--raised); border-top: 1px solid var(--line); border-bottom: 0; }
+.addrow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.addrow .plus { color: var(--muted); font-size: 13px; }
+.t { font-weight: 550; } .tx { max-width: 560px; }
+.muted { color: var(--muted); } .small { font-size: 12.5px; } .mono { font-family: var(--mono); font-size: 12px; }
+pre, .body { white-space: pre-wrap; word-break: break-word; font: 13px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; background: var(--raised); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 6px 0 0; }
+pre.code { font: 12.5px/1.5 var(--mono); }
+.body.long { max-height: 360px; overflow-y: auto; }
+label.f { display: block; font-size: 12px; color: var(--muted); margin: 14px 0 4px; }
+.help { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.tags .chip button { border: 0; background: none; padding: 0 0 0 2px; color: var(--muted); font-size: 13px; line-height: 1; }
+.tags input { border: 0; flex: 1; min-width: 140px; padding: 2px 4px; }
+.tags input:focus { outline: none; }
+.errors { background: var(--critical-soft); color: var(--critical-ink); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; }
+.media video, .media img { width: 100%; max-width: 360px; border-radius: 10px; border: 1px solid var(--line); background: #000; display: block; }
+.quote { border-left: 3px solid var(--line); padding: 2px 0 2px 10px; margin: 6px 0; color: var(--ink-2); font-size: 13px; }
+#veil { position: fixed; inset: 0; background: rgba(11,11,11,.28); opacity: 0; pointer-events: none; transition: opacity .2s ease-out; z-index: 5; }
+#veil.on { opacity: 1; pointer-events: auto; }
+#drawer { position: fixed; top: 0; right: 0; height: 100vh; width: min(600px, 100vw); background: var(--surface); border-left: 1px solid var(--line); z-index: 6; transform: translateX(100%); transition: transform .25s ease-out; display: flex; flex-direction: column; }
+#drawer.on { transform: none; }
+#drawer header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+#drawer header h3 { margin: 0; font-size: 15px; flex: 1; }
+#drawer .dbody { padding: 6px 18px 40px; overflow-y: auto; }
+#toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 15px; border-radius: 9px; font-size: 13px; opacity: 0; transition: opacity .2s ease-out; pointer-events: none; z-index: 9; max-width: calc(100% - 32px); }
+#toast.on { opacity: 1; }
+@media (max-width: 980px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cols { grid-template-columns: 1fr; } }
+.topbar, .tabbar { display: none; }
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; align-content: start; }
+  aside.nav { display: none; }
+  .topbar { display: flex; position: sticky; top: 0; z-index: 3; align-items: center; gap: 10px; height: calc(54px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 16px 0; margin: -16px -16px 16px; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .topbar .t { font-weight: 750; font-size: 17px; display: flex; align-items: center; gap: 8px; } .topbar .m { color: var(--muted); font-size: 12px; margin-left: auto; }
+  .head h1 { font-size: 24px; }
+  .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; padding: 4px 6px calc(4px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
+  .tabbar button { flex: 1; border: 0; background: none; padding: 6px 0 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); position: relative; min-height: 54px; }
+  .tabbar button .i { font-size: 22px; line-height: 1.05; }
+  .tabbar button[aria-current="page"] { color: var(--accent); font-weight: 750; }
+  .tabbar button[aria-current="page"]::before { content: ""; position: absolute; top: -4px; left: 28%; right: 28%; height: 3px; background: var(--accent); }
+  .tabbar .badge { position: absolute; top: 2px; left: calc(50% + 7px); background: var(--critical); color: #fff; font-size: 10px; font-weight: 750; min-width: 17px; height: 17px; line-height: 17px; padding: 0 5px; border-radius: 9px !important; }
+  main { padding: 16px 16px calc(86px + env(safe-area-inset-bottom)); }
+  body.immersive .tabbar { display: none; }
+  .tile.hero .value { font-size: 46px; } .tile .note { white-space: normal; }
+  .dt-bar input.dt-q { width: 100%; }
+}
+.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 7; background: var(--surface); border-top: 1px solid var(--line); padding: 10px 16px calc(20px + env(safe-area-inset-bottom)); transform: translateY(105%); transition: transform .25s ease-out; }
+.sheet.on { transform: none; }
+.sheet .grab { width: 40px; height: 4px; background: var(--line); margin: 2px auto 14px; border-radius: 2px !important; }
+.sheet h3 { margin: 0 0 12px; font-size: 15px; }
+.sheet .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.sheet .grid button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 6px; font-size: 13px; background: var(--raised); border: 1px solid var(--line); position: relative; min-height: 84px; }
+.sheet .grid button .i { font-size: 26px; }
+.sheet .grid .n { position: absolute; top: 6px; right: 8px; font-size: 11px; color: var(--muted); }
+.panel, .tile, .dt, button, input, textarea, select, .chip, .about, .tags, .body, pre, .media video, .media img, #toast, .nav li button, .meter, .meter span, .strip .b, .errors { border-radius: var(--r, 8px) !important; }
+main.full { padding: 0 !important; max-width: none; }
+.story { position: relative; height: 100dvh; overflow: hidden; }
+.deck { display: flex; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; overscroll-behavior-x: contain; }
+.deck::-webkit-scrollbar { display: none; }
+.storybar { position: absolute; top: 0; left: 0; right: 0; z-index: 2; padding: calc(10px + env(safe-area-inset-top)) clamp(14px, 4vw, 40px) 0; color: #fff; pointer-events: none; transition: color .2s ease-out; }
+.storybar .segs { display: flex; gap: 4px; pointer-events: auto; }
+.storybar .segs button { flex: 1; height: 4px; min-height: 0; padding: 0; border: 0; color: inherit; background: currentColor; opacity: .28; border-radius: 2px !important; }
+.storybar .segs button.done, .storybar .segs button.on { opacity: 1; }
+.storybar .row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 13px; font-weight: 650; letter-spacing: .02em; }
+.storybar .row button { pointer-events: auto; background: transparent; color: currentColor; border: 1.5px solid currentColor; padding: 5px 12px; font-size: 13px; font-weight: 650; }
+.arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 46px; height: 46px; font-size: 24px; line-height: 1; background: rgba(255,255,255,.92); color: #0b0b0b; border: 1px solid rgba(0,0,0,.12); display: none; }
+.arrow.prev { left: 14px; } .arrow.next { right: 14px; }
+@media (hover: hover) and (min-width: 761px) { .arrow { display: block; } #deck .slide { padding-left: clamp(72px, 6vw, 88px); padding-right: clamp(72px, 6vw, 88px); } }
+/* ── a slide: one frame centred with auto margins, so it can never spill above the top;
+   --fit shrinks the type step by step (fitSlides) until the slide fits the screen ── */
+.slide { --fit: 1; flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; display: flex; overflow-y: auto; overflow-x: hidden;
+  padding: calc(84px + env(safe-area-inset-top)) clamp(20px, 6vw, 88px) calc(24px + env(safe-area-inset-bottom));
+  background: var(--s-bg); color: var(--s-ink); font-family: var(--b-font, inherit); }
+.slide .frame { margin: auto 0; width: 100%; display: flex; flex-direction: column; gap: calc(var(--fit) * clamp(20px, 3.2vh, 34px)); }
+.slide .side { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.slide .side:empty { display: none; }
+.slide .kicker { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; opacity: .72; margin-bottom: calc(var(--fit) * 14px); font-weight: 700; }
+.slide h2.big { font-size: calc(var(--fit) * clamp(30px, min(6vw, 7.4vh), 64px)); line-height: 1.05; letter-spacing: -0.025em; font-weight: var(--b-display-weight, 800);
+  margin: 0 0 calc(var(--fit) * 18px); max-width: 20ch; overflow-wrap: break-word; }
+.slide.cover h2.big { font-size: calc(var(--fit) * clamp(38px, min(8vw, 10vh), 92px)); max-width: 16ch; }
+.slide.question h2.big { font-size: calc(var(--fit) * clamp(28px, min(5vw, 6.6vh), 56px)); max-width: 22ch; }
+.slide .sub { font-size: calc(var(--fit) * clamp(17px, min(2.3vw, 3vh), 23px)); line-height: 1.42; max-width: 40ch; opacity: .88; }
+.slide .figure { font-size: calc(var(--fit) * clamp(72px, min(20vw, 18vh), 176px)); line-height: .9; font-weight: var(--b-display-weight, 800); letter-spacing: -0.045em; color: var(--s-accent); }
+.slide .figure-label { font-size: calc(var(--fit) * clamp(15px, 1.9vw, 19px)); margin: 6px 0 calc(var(--fit) * 22px); opacity: .78; }
+.slide ul.points { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(var(--fit) * 12px); max-width: 46ch; }
+.slide ul.points li { font-size: calc(var(--fit) * clamp(16px, min(2.1vw, 2.7vh), 21px)); line-height: 1.42; padding-left: 1.1em; position: relative; }
+.slide ul.points li::before { content: ""; position: absolute; left: 0; top: .55em; width: .42em; height: .42em; background: var(--s-accent); }
+.slide ol.items { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(var(--fit) * 18px); max-width: 52ch; counter-reset: n; }
+.slide ol.items li { counter-increment: n; display: grid; grid-template-columns: 2.1em minmax(0, 1fr); gap: 8px; font-size: calc(var(--fit) * clamp(16px, min(2.1vw, 2.7vh), 21px)); line-height: 1.42; }
+.slide ol.items li::before { content: counter(n, decimal-leading-zero); font-weight: var(--b-display-weight, 800); color: var(--s-accent); }
+.slide .why { display: block; font-size: .8em; opacity: .72; margin-top: 3px; }
+.slide .src { display: block; font-size: .7em; opacity: .58; margin-top: 3px; letter-spacing: .01em; }
+.slide .quote2 { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .78em; font-style: italic; opacity: .78; margin-top: 4px; border-left: 2px solid var(--s-accent); padding-left: 8px; }
+.slide .tag { display: inline-block; font-size: .62em; text-transform: uppercase; letter-spacing: .1em; padding: 1px 7px; margin-right: 8px; border: 1px solid currentColor; vertical-align: .15em; border-radius: var(--r, 8px); }
+.slide .logo svg { height: calc(var(--fit) * clamp(26px, 3.6vw, 38px)); width: auto; display: block; margin-bottom: calc(var(--fit) * clamp(20px, 4vh, 44px)); }
+.slide .logo .word { font-weight: var(--b-display-weight, 800); font-size: 20px; letter-spacing: .04em; margin-bottom: calc(var(--fit) * clamp(20px, 4vh, 44px)); }
+.slide .swipehint { font-size: 13px; opacity: .7; margin-top: calc(var(--fit) * 18px); }
+/* replies: the person's turn, on every slide */
+.respond { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.respond::before, .slide .answer::before { content: attr(data-label); flex: 0 0 100%; font-size: 12px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; opacity: .68; }
+.respond .acts, .slide .opts, .slide .rates { display: flex; flex-wrap: wrap; gap: 8px; }
+.respond .acts button, .slide .opts button, .slide .rates button { background: transparent; color: var(--s-ink); border: 2px solid currentColor; font-size: 15px; padding: 9px 15px; font-weight: 700; min-height: 44px; }
+.respond .acts button.on, .slide .opts button.on, .slide .rates button.on { background: var(--s-ink); color: var(--s-bg); }
+.respond .note { display: flex; gap: 8px; flex: 1 1 240px; min-width: 0; }
+.respond .note input { flex: 1; min-width: 0; font-size: 16px; padding: 10px 12px; background: #fff; color: #0b0b0b; border: 2px solid var(--s-ink); }
+.respond .note button, .slide button.save { background: var(--s-ink); color: var(--s-bg); border: 0; font-size: 16px; font-weight: 750; padding: 0 20px; min-height: 46px; justify-self: start; }
+.slide .answer { display: grid; gap: 10px; }
+.respond .done, .slide .answered { font-size: 16px; padding: 12px 16px; border-left: 4px solid var(--s-accent); background: color-mix(in srgb, var(--s-ink) 8%, transparent); display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; flex: 1 1 100%; }
+.respond .done button, .slide .answered button { background: none; border: 0; color: inherit; text-decoration: underline; padding: 0; font-size: 14px; min-height: 0; }
+.slide .item-acts { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.slide .item-acts button { background: transparent; color: var(--s-ink); border: 1.5px solid currentColor; font-size: 14px; padding: 6px 12px; font-weight: 700; min-height: 38px; }
+.slide .item-acts button.go { background: var(--s-ink); color: var(--s-bg); border-color: var(--s-ink); }
+.slide .item-done { font-size: 14px; margin-top: 6px; opacity: .8; }
+.slide textarea.ans, .slide textarea.fb { min-height: 72px; font-family: var(--b-font, inherit); font-size: 16px; background: #fff; color: #0b0b0b; border: 2px solid var(--s-ink); width: 100%; }
+.slide label.fl { font-size: 14px; font-weight: 650; opacity: .9; margin-top: 6px; display: block; }
+.slide button.cta { background: var(--s-ink); color: var(--s-bg); border: 0; font-size: 16px; font-weight: 750; padding: 13px 20px; justify-self: start; min-height: 48px; }
+/* the engine's own top three, under the storyteller's words */
+.top3 { display: grid; gap: 6px; }
+.top3 .t3h { font-size: 12px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; opacity: .68; margin-bottom: 2px; }
+.top3 .t3 { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; text-align: left; width: 100%; min-height: 48px; padding: 9px 12px; font-size: 14.5px; line-height: 1.35;
+  color: var(--s-ink); background: color-mix(in srgb, var(--s-ink) 6%, transparent); border: 1px solid color-mix(in srgb, var(--s-ink) 12%, transparent); font-weight: 500; }
+button.t3:hover { background: color-mix(in srgb, var(--s-ink) 11%, transparent); }
+.top3 .t3d { font-size: 12.5px; opacity: .72; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.top3 .t3t { min-width: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.top3 .t3t small { display: block; font-size: 12px; opacity: .7; margin-top: 2px; }
+.top3 .t3 .chip { font-size: 11px; }
+.top3 .t3.acct { grid-template-columns: minmax(0, 1fr) auto; }
+.top3 .t3 .acts2 { display: flex; gap: 6px; }
+.top3 .t3 .acts2 button { background: transparent; color: var(--s-ink); border: 1.5px solid currentColor; font-size: 13px; font-weight: 700; padding: 5px 10px; min-height: 34px; }
+.top3 .t3 .acts2 button.go { background: var(--s-ink); color: var(--s-bg); border-color: var(--s-ink); }
+@media (max-width: 760px) { .top3 .t3.acct { grid-template-columns: 1fr; gap: 8px; } .top3 .t3.acct .t3t { -webkit-line-clamp: 3; } }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stats .stat { padding: 12px 14px; border: 1.5px solid color-mix(in srgb, var(--s-ink) 28%, transparent); font-size: 12.5px; line-height: 1.3; }
+.stats .stat b { display: block; font-size: clamp(24px, min(3vw, 4vh), 32px); font-weight: var(--b-display-weight, 800); line-height: 1.05; margin-bottom: 2px; }
+/* up to laptop widths the story takes the whole screen, as on a phone; Dashboard brings the menu back */
+@media (min-width: 761px) and (max-width: 1279px) { body.immersive aside.nav { display: none; } body.immersive .app { grid-template-columns: 1fr; } }
+/* a wide deck (fitSlides sets .wide from the deck's own width, menu or not): the story on the left,
+   the engine's list and the reply as one card on the right */
+.deck.wide .slide .frame { max-width: 920px; }
+.deck.wide .slide .frame:not(.two) .side { max-width: 620px; padding-top: 18px; border-top: 1px solid color-mix(in srgb, var(--s-ink) 14%, transparent); }
+.deck.wide .slide .frame.two { display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 34%, 400px); column-gap: clamp(36px, 4.5vw, 88px); align-items: center; max-width: 1280px; margin: auto; }
+.deck.wide .slide .two .side { padding: 22px; background: color-mix(in srgb, var(--s-ink) 5%, transparent); border: 1px solid color-mix(in srgb, var(--s-ink) 13%, transparent); }
+.deck.wide .slide .two .side .respond { display: grid; } .deck.wide .slide .two .side .respond .note { flex: initial; }
+.deck.wide .slide .two .side > * + * { padding-top: 14px; border-top: 1px solid color-mix(in srgb, var(--s-ink) 12%, transparent); }
+@media (prefers-reduced-motion: reduce) { #drawer, #veil, #toast, .sheet, .storybar { transition: none; } .deck { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="nav">
+    <div class="brand" id="brand">Engine control<small id="meta">reading…</small></div>
+    <ul id="nav"></ul>
+    <div class="foot">Only on this computer (127.0.0.1).<br>Approve posts on <a href="http://127.0.0.1:4310" target="_blank" rel="noopener">the desk</a>.</div>
+  </aside>
+  <main id="main"></main>
+</div>
+<div id="veil"></div>
+<aside id="drawer" aria-hidden="true"><header><h3 id="dtitle"></h3><button id="dclose" aria-label="Close">Close</button></header><div class="dbody" id="dbody"></div></aside>
+<nav class="tabbar" id="tabbar" aria-label="Main"></nav>
+<div class="sheet" id="sheet" aria-hidden="true"></div>
+<div id="toast" role="status"></div>
+<script>
+const TOKEN = "__CONTROL_TOKEN__";
+const DESK = "http://127.0.0.1:4310";
+const VIEWS = [["story", "📖", "Story"], ["overview", "🏠", "Today"], ["content", "📝", "Posts"], ["themes", "🏷️", "Themes"], ["accounts", "👥", "Accounts"],
+  ["suggested", "✨", "Suggestions"], ["listening", "👂", "What we heard"], ["replies", "💬", "Replies"], ["claims", "🔎", "Claim ideas"],
+  ["learning", "📈", "Results"], ["engine", "⚙️", "System"]];
+const store = {get(k, d) { try { return JSON.parse(localStorage.getItem("control." + k)) ?? d; } catch (e) { return d; } },
+               set(k, v) { try { localStorage.setItem("control." + k, JSON.stringify(v)); } catch (e) {} }};
+let S = null, view = "story", slideAt = 0;  // the page always opens on the story
+const DT = store.get("tables", {}), TABLES = {};
+
+// ── words, in plain language ───────────────────────────────────────────
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const chip = (t, k = "", title = "") => t ? `<span class="chip ${k}" ${title ? `title="${esc(title)}"` : ""}>${esc(t)}</span>` : "";
+const theme = t => t ? `<span class="chip theme">${esc(t)}</span>` : "";
+const link = (url, text) => url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text || url)}</a>` : "";
+const CHECK = {pass: ["good", "✓ ready", "The automatic check found nothing to fix."],
+  "pass-with-edits": ["warning", "! small fixes", "The automatic check fixed or flagged small things; read its note."],
+  block: ["critical", "✕ stopped", "The check stopped this post: it says something we cannot prove yet."]};
+const check = v => { const c = CHECK[v]; return c ? chip(c[1], c[0], c[2]) : chip("not checked yet", "", "The automatic check has not read this post yet."); };
+const LICENCE = {licensed: ["good", "free to use", "We can talk about this freely."],
+  "licensed-with-hedge": ["warning", "careful wording", "We can talk about it, but only with the careful wording written in themes.md."],
+  held: ["critical", "not yet", "We only talk about the general idea, never about what we do, until it is graded."]};
+const licence = l => { const x = LICENCE[l]; return x ? chip(x[1], x[0], x[2]) : chip(l || "not graded"); };
+const WHERE = {proposed: "waiting for you", approved: "approved", rejected: "rejected", hold: "on hold", held: "on hold"};
+const where = p => chip(WHERE[p.decision || p.alpha_status] || p.decision || p.alpha_status || "");
+const iso = d => d ? String(d).slice(0, 10) : "";
+const day = d => d ? new Date(iso(d) + "T12:00:00").toLocaleDateString(undefined, {weekday: "short", day: "numeric", month: "short"}) : "no date";
+const when = t => t ? new Date(t).toLocaleString(undefined, {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"}) : "";
+const plus = (d, n) => { const x = new Date(d + "T12:00:00"); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+const fmt = n => Number(n || 0).toLocaleString();
+const xurl = h => `https://x.com/${String(h || "").replace(/^@/, "")}`;
+const clean = t => String(t || "").replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
+const excerpt = p => clean(p.teaser_x || p.teaser_linkedin || p.post || "").slice(0, 240);
+const words = list => `<details><summary>Words on this page</summary><dl>${list.map(([w, m]) => `<dt>${esc(w)}</dt><dd>${esc(m)}</dd>`).join("")}</dl></details>`;
+const about = (lines, glossary) => `<div class="about">${lines.map(l => `<p>${l}</p>`).join("")}${glossary ? words(glossary) : ""}</div>`;
+
+function applyGenome(g) {
+  if (!g) return;
+  const r = document.documentElement.style, c = g.colors || {};
+  for (const [k, v] of Object.entries(c)) r.setProperty(`--b-${k.replace(/_/g, "-")}`, v);
+  r.setProperty("--b-font", g.type?.stack || "inherit");
+  r.setProperty("--b-display-weight", g.type?.display_weight || 800);
+  r.setProperty("--r", `${g.shape?.radius ?? 8}px`);
+}
+
+function toast(m) { const t = document.getElementById("toast"); t.textContent = m; t.classList.add("on"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("on"), 3600); }
+
+async function load() {
+  try { S = await (await fetch("/api/state", {cache: "no-store"})).json(); }
+  catch (e) { document.getElementById("meta").textContent = "could not read the engine"; toast(String(e)); return; }
+  document.getElementById("brand").innerHTML = `${esc(S.genome?.name || S.stream)} · control<small id="meta">updated ${esc(when(S.built_at))}</small>`;
+  applyGenome(S.genome);
+  render();
+}
+
+async function act(path, body, done) {
+  try {
+    const r = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json", "X-Control-Token": TOKEN}, body: JSON.stringify(body)});
+    const j = await r.json();
+    if (!r.ok) { toast(j.error || "that did not work"); if (r.status === 409) load(); return false; }
+    toast(done); await load(); return true;
+  } catch (e) { toast("could not reach the engine: " + e); return false; }
+}
+
+// ── the data table ─────────────────────────────────────────────────────
+const val = (r, k) => typeof k === "function" ? k(r) : r?.[k];
+function table(id, cfg) {
+  TABLES[id] = cfg;
+  const st = DT[id] = DT[id] || {q: "", sort: null, dir: 1, f: {}};
+  st.f = st.f || {};
+  const filters = (cfg.filters || []).map((f, fi) => {
+    const vals = [...new Set(cfg.rows.flatMap(r => [].concat(val(r, f.key) ?? [])).filter(v => v !== "" && v != null).map(String))].sort();
+    if (vals.length < 2) return "";
+    return `<select data-dt="${id}" data-f="${fi}" aria-label="${esc(f.label)}"><option value="">${esc(f.label)}: all</option>${vals.map(v => `<option ${st.f[fi] === v ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>`;
+  }).join("");
+  const add = cfg.add ? `<tfoot><tr><td colspan="${cfg.cols.length}"><div class="addrow"><span class="plus">+ ${esc(cfg.add.label || "Add")}</span>${cfg.add.fields.map(f => `<input data-add="${id}" data-k="${esc(f.key)}" placeholder="${esc(f.placeholder || f.key)}" style="width:${f.width || 180}px;max-width:100%">`).join("")}<button class="primary" data-dt-add="${id}">Add</button></div></td></tr></tfoot>` : "";
+  return `<div class="dt"><div class="dt-bar">${cfg.search === false ? "" : `<input class="dt-q" data-dt="${id}" placeholder="Search" value="${esc(st.q || "")}" aria-label="Search this table">`}${filters}<span class="dt-count" id="dtc-${id}"></span></div>
+    <div class="scroll"><table><thead><tr>${cfg.cols.map((c, i) => `<th class="${c.num ? "num " : ""}${c.sort === false ? "" : "sortable"}" ${c.sort === false ? "" : `data-dt-sort="${id}" data-i="${i}"`}>${esc(c.label)}</th>`).join("")}</tr></thead>
+    <tbody id="dtb-${id}"></tbody>${add}</table></div></div>`;
+}
+function drawTable(id) {
+  const T = TABLES[id], st = DT[id], body = document.getElementById("dtb-" + id);
+  if (!T || !body) return;
+  const q = String(st.q || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
+  let rows = T.rows.filter(r => {
+    for (const [fi, v] of Object.entries(st.f)) {
+      const f = (T.filters || [])[+fi];
+      if (v && f && ![].concat(val(r, f.key) ?? []).map(String).includes(v)) return false;
+    }
+    if (!q.length) return true;
+    const hay = (T.cols.map(c => [].concat(val(r, c.key) ?? []).join(" ")).join(" ") + " " + (T.text ? T.text(r) : "")).toLowerCase();
+    return q.every(w => hay.includes(w));
+  });
+  if (st.sort != null && T.cols[st.sort]) {
+    const k = T.cols[st.sort].key;
+    rows = [...rows].sort((a, b) => {
+      const x = val(a, k), y = val(b, k);
+      if (x == null || x === "") return 1; if (y == null || y === "") return -1;
+      return (typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y), undefined, {numeric: true})) * st.dir;
+    });
+  }
+  body.innerHTML = rows.length ? rows.map(r => `<tr ${T.onRow ? `class="click" data-dt-row="${id}" data-ri="${T.rows.indexOf(r)}"` : ""}>${T.cols.map(c => `<td class="${c.num ? "num" : ""}">${c.render ? c.render(r) : esc(val(r, c.key))}</td>`).join("")}</tr>`).join("")
+    : `<tr><td class="empty" colspan="${T.cols.length}">${esc(T.empty || "Nothing here yet.")}</td></tr>`;
+  document.getElementById("dtc-" + id).textContent = rows.length === T.rows.length ? `${T.rows.length} rows` : `${rows.length} of ${T.rows.length}`;
+  body.closest("table").querySelectorAll("th[data-i]").forEach(th => th.setAttribute("aria-sort", +th.dataset.i === st.sort ? (st.dir > 0 ? "ascending" : "descending") : "none"));
+}
+const saveTables = () => store.set("tables", Object.fromEntries(Object.entries(DT).map(([k, v]) => [k, {sort: v.sort, dir: v.dir, f: v.f, q: ""}])));
+// A title and the first lines of the text it names: a reference always shows what it says.
+const titled = (title, text) => `<div class="tx"><div class="t">${esc(title)}</div>${text ? `<div class="excerpt">${esc(clean(text))}</div>` : ""}</div>`;
+
+// ── drawer ─────────────────────────────────────────────────────────────
+function openDrawer(title, html) {
+  document.getElementById("dtitle").textContent = title;
+  document.getElementById("dbody").innerHTML = html;
+  document.getElementById("drawer").classList.add("on"); document.getElementById("drawer").setAttribute("aria-hidden", "false");
+  document.getElementById("veil").classList.add("on");
+}
+function closeDrawer() {
+  document.getElementById("drawer").classList.remove("on"); document.getElementById("drawer").setAttribute("aria-hidden", "true");
+  document.getElementById("veil").classList.remove("on");
+}
+
+// ── what needs a person ────────────────────────────────────────────────
+const upcoming = () => S.posts?.upcoming || [];
+function needs() {
+  const out = [], week = plus(S.today, 7);
+  for (const p of upcoming()) {
+    if (p.gate === "block") out.push({k: "critical", d: p.date, t: `Stopped by the check: ${p.title}`, x: excerpt(p), go: `post:${p.id}`});
+    else if (!p.decision && p.alpha_status === "proposed" && (p.date || "9999") <= week) out.push({k: "warning", d: p.date, t: `Approve or hold: ${p.title}`, x: excerpt(p), go: `post:${p.id}`});
+  }
+  for (const q of (S.story?.questions || []).filter(q => q.status === "open")) out.push({k: "info", t: `A big question for you: ${q.question}`, x: q.why, go: `q:${q.id}`});
+  for (const r of S.replies?.proposals || []) out.push({k: "info", t: `Place a reply on: ${r.target_title || r.theme}`, x: r.draft_comment, go: "view:replies"});
+  for (const h of S.listening?.held_for_person || []) out.push({k: "info", t: "The listener wants a person to check this", x: typeof h === "string" ? h : JSON.stringify(h), go: "view:listening"});
+  for (const c of S.claims?.review || []) out.push({k: "warning", t: `A fact a post relies on has changed: ${c.id || c.title || ""}`, go: "view:claims"});
+  if (S.accounts && !S.accounts.private.present) out.push({k: "critical", t: "The private list of names to keep quiet is missing, so every post is stopped", go: "view:accounts"});
+  for (const j of S.engine?.jobs || []) if (j.loaded === false && !/optional/i.test(j.what || "")) out.push({k: "warning", t: `A scheduled job is switched off: ${j.job}`, x: j.what, go: "view:engine"});
+  return out;
+}
+function greeting() { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; }
+
+// ── pages ──────────────────────────────────────────────────────────────
+// Every slide takes a response: one of its actions, a note, or both. The
+// storyteller may set a slide's own `actions`; these are the defaults.
+const RESPOND = {cover: ["Got it", "Tell me more next time"], state: ["Looks right", "Something is off"],
+  discoveries: ["Useful", "Not useful"], explore: ["Look into it", "Not now"], add: [], next: ["Looks right", "Change the plan"]};
+const redo = new Set();  // slides whose answer the person is changing
+const responseOf = (i, item = null) => (S.story?.responses || []).find(r => r.slide === i && (r.item ?? null) === item);
+
+function respondHtml(s, i) {
+  const r = responseOf(i);
+  if (r && !redo.has(i)) return `<div class="respond"><div class="done"><span>✓ ${esc(r.action || "Noted")}${r.text ? ` · “${esc(r.text)}”` : ""}</span><button data-redo="${i}">change</button></div></div>`;
+  const acts = s.actions?.length ? s.actions : (RESPOND[s.kind] || []);
+  return `<div class="respond" data-label="Your reply">${acts.length ? `<div class="acts">${acts.map(a => `<button data-act="${i}" data-a="${esc(a)}">${esc(a)}</button>`).join("")}</div>` : ""}
+    <div class="note"><input id="note-${i}" placeholder="${acts.length ? "Or add a note" : "Add a note"}" aria-label="A note on this slide" enterkeyhint="send"><button data-send="${i}">Send</button></div></div>`;
+}
+
+function itemHtml(s, i, o, j) {
+  o = typeof o === "string" ? {text: o} : o;
+  let acts = "";
+  if (s.kind === "add") {
+    const r = responseOf(i, j);
+    const label = o.handle ? `Watch ${o.handle}` : (o.kind === "theme" && o.tag) ? `Add ${o.tag}` : "Add it";
+    acts = r && !redo.has(`${i}:${j}`) ? `<div class="item-done">✓ ${esc(r.action)}</div>`
+      : `<div class="item-acts"><button class="go" data-additem="${i}:${j}">${esc(label)}</button><button data-skipitem="${i}:${j}">Skip</button></div>`;
+  }
+  const f = o.source ? (S.listening?.findings || []).find(x => x.id === o.source) : null;
+  const quote = f && Array.isArray(f.evidence) && f.evidence[0]?.quote ? `<span class="quote2" title="${esc(clean(f.evidence[0].quote))}">“${esc(clean(f.evidence[0].quote))}”</span>` : "";
+  return `<li><div>${o.kind ? `<span class="tag">${esc(o.kind)}</span>` : ""}${esc(o.text)}${o.why ? `<span class="why">${esc(o.why)}</span>` : ""}${quote}${o.source ? `<span class="src">${esc(o.source)}${f ? ` · ${esc(f.theme)}` : ""}</span>` : ""}${acts}</div></li>`;
+}
+
+// Real data under the storyteller's words: the top three the engine knows, live.
+function topPanel(s, i) {
+  const head = t => `<div class="t3h">${esc(t)}</div>`;
+  if (s.kind === "cover" && S.story?.latest) {
+    const up = upcoming(), fortnight = up.filter(p => (p.date || "9999") <= plus(S.today, 13)).length;
+    const waiting = up.filter(p => !p.decision && p.alpha_status === "proposed" && p.gate !== "block").length;
+    return `<div class="stats"><div class="stat"><b>${fortnight}</b>posts in 2 weeks</div><div class="stat"><b>${waiting}</b>waiting for you</div><div class="stat"><b>${(S.listening?.findings || []).length}</b>things heard</div></div>`;
+  }
+  if (s.kind === "state") {
+    const P = upcoming().slice(0, 3); if (!P.length) return "";
+    return `<div class="top3">${head("Next up")}${P.map(p => `<button class="t3" data-go="post:${esc(p.id)}"><span class="t3d">${esc(day(p.date))}</span><span class="t3t">${esc(p.title)}<small>${esc(p.theme)}</small></span>${check(p.gate)}</button>`).join("")}</div>`;
+  }
+  if (s.kind === "discoveries" && !(s.items || []).length) {
+    const F = [...(S.listening?.findings || [])].sort((a, b) => (Number(b.relevance) || 0) - (Number(a.relevance) || 0)).slice(0, 3);
+    return F.length ? `<div class="top3">${head("Top findings")}${F.map(f => `<button class="t3" data-go="view:listening"><span class="t3d">${esc(f.theme)}</span><span class="t3t">${esc(f.finding)}</span><span></span></button>`).join("")}</div>` : "";
+  }
+  if (s.kind === "explore") {
+    const W = (S.listening?.warmest || []).slice(0, 3); if (!W.length) return "";
+    return `<div class="top3">${head("Loudest themes this pass")}${W.map(w => `<button class="t3" data-go="view:themes"><span class="t3d">${esc(w.relevance)}</span><span class="t3t">${esc(w.theme)}<small>${esc(w.count)} posts · ${esc(clean(w.why).slice(0, 110))}</small></span><span></span></button>`).join("")}</div>`;
+  }
+  if (s.kind === "add") {
+    const j = (s.items || []).findIndex(o => typeof o === "object" && o.kind === "account" && !o.handle);
+    const G = (S.suggested?.rows || []).slice(0, 3);
+    if (j < 0 || !G.length) return "";
+    return `<div class="top3">${head("Top suggested accounts")}${G.map(a => `<div class="t3 acct"><span class="t3t"><b>${esc(a.handle)}</b> · seen ${a.hits}× · ${fmt(a.followers)} followers<small>${esc(a.themes.join(" "))} · ${esc(clean(a.samples[0]?.text).slice(0, 100))}</small></span>
+      <span class="acts2"><button class="go" data-watch="${esc(a.handle)}" data-themes="${esc(a.themes.join(","))}" data-respond="${i}:${j}">Watch</button><button data-dismiss="${esc(a.handle)}">Dismiss</button></span></div>`).join("")}</div>`;
+  }
+  if (s.kind === "next") {
+    const N = needs().slice(0, 3); if (!N.length) return "";
+    return `<div class="top3">${head("Waiting for you")}${N.map(n => `<button class="t3" data-go="${esc(n.go)}"><span class="t3d">${n.d ? esc(day(n.d)) : "now"}</span><span class="t3t">${esc(n.t)}</span><span></span></button>`).join("")}</div>`;
+  }
+  return "";
+}
+
+function slideHtml(s, i, total, g) {
+  const c = g?.colors || {};
+  // Flat brand colours, one per beat; text always on a background it reads well on.
+  const look = {cover: [c.primary, c.on_primary, c.accent], state: [c.surface, c.ink, c.primary], discoveries: [c.paper, c.ink, c.primary],
+    question: [c.tint, c.primary, c.accent], explore: [c.surface, c.ink, c.accent], add: [c.paper, c.ink, c.accent],
+    next: [c.surface, c.ink, c.primary], feedback: [c.primary, c.on_primary, c.accent]}[s.kind] || [c.surface, c.ink, c.primary];
+  const style = `--s-bg:${look[0]};--s-ink:${look[1]};--s-accent:${look[2]}`;
+  const kicker = {cover: `The story of ${esc(day(S.story?.latest?.date || S.today))}`, state: "Where we stand", discoveries: "What we found",
+    question: "A big question for you", explore: "Worth exploring", add: "Worth adding", next: "What happens next", feedback: "Before you go"}[s.kind] || "";
+  const same = t => t && kicker && String(t).trim().toLowerCase() === kicker.toLowerCase();
+  const kick = same(s.title) ? "" : `<div class="kicker">${kicker}</div>`;
+  const points = s.points?.length ? `<ul class="points">${s.points.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+  const items = s.items?.length ? `<ol class="items">${s.items.map((o, j) => itemHtml(s, i, o, j)).join("")}</ol>` : "";
+  let body = "", reply = "";
+  if (s.kind === "cover") {
+    const logo = g?.logo?.on_dark ? `<div class="logo">${g.logo.on_dark}</div>` : `<div class="logo"><div class="word">${esc(g?.name || S.stream)}</div></div>`;
+    body = `${logo}<div class="kicker">${kicker}</div><h2 class="big">${esc(s.title)}</h2>${s.subtitle ? `<div class="sub">${esc(s.subtitle)}</div>` : ""}${S.story?.latest ? `<div class="swipehint">${matchMedia("(hover: hover)").matches ? "Use → or the arrows to read on" : "Swipe to read on"} · answer any slide as you go</div>` : ""}`;
+    reply = S.story?.latest ? respondHtml(s, i) : "";
+  } else if (s.kind === "state") {
+    body = `<div class="kicker">${kicker}</div>${s.figure ? `<div class="figure">${esc(s.figure.value)}</div><div class="figure-label">${esc(s.figure.label)}</div>` : ""}<h2 class="big" style="font-size:clamp(24px,min(4.4vw,6vh),48px)">${esc(s.title)}</h2>${points}`;
+    reply = respondHtml(s, i);
+  } else if (s.kind === "question") {
+    const q = (S.story?.questions || []).find(x => x.id === s.id);
+    const answered = q && q.status === "answered" && !redo.has(i);
+    body = `<div class="kicker">${kicker}</div><h2 class="big" style="font-size:clamp(28px,min(5.6vw,8vh),64px)">${esc(s.question)}</h2>${s.why ? `<div class="sub">${esc(s.why)}</div>` : ""}`;
+    reply = answered ? `<div class="answered"><span>✓ Your answer: ${esc(q.answer)}</span><button data-redo="${i}">change</button></div>`
+      : s.id ? `<div class="answer" data-label="Your answer">${s.options?.length ? `<div class="opts">${s.options.map(o => `<button data-opt="${esc(s.id)}" data-text="${esc(o)}">${esc(o)}</button>`).join("")}</div>` : ""}
+          <textarea class="ans" id="ans-${esc(s.id)}" placeholder="${s.options?.length ? "Pick one, or say it in your words" : "Your answer, in a few words"}"></textarea><button class="save" data-answer="${esc(s.id)}">Save my answer</button></div>` : "";
+  } else if (s.kind === "feedback") {
+    const F = S.story?.feedback;
+    body = `<div class="kicker">${kicker}</div><h2 class="big">How was this story?</h2>`;
+    reply = F && !redo.has(i)
+      ? `<div class="answered"><span>✓ Thank you. ${F.rating ? `You found it ${esc(F.rating)}. ` : ""}The storyteller reads this next time${F.remember ? ", and every session now starts with what you asked us to remember" : ""}.</span><button data-redo="${i}">change it</button></div><button class="cta" data-view="overview">Open the dashboard →</button>`
+      : `<div class="answer" data-label="Your feedback"><div class="rates">${(S.story?.ratings || []).map(x => `<button data-rate="${esc(x)}">${esc(x[0].toUpperCase() + x.slice(1))}</button>`).join("")}</div>
+          <label class="fl" for="fb-next">What should the next story cover?</label><textarea class="fb" id="fb-next" placeholder="A topic, a question, a number you want to see"></textarea>
+          <label class="fl" for="fb-rem">Anything we should always remember?</label><textarea class="fb" id="fb-rem" placeholder="A rule, a preference, a fact: every future session sees it"></textarea>
+          <button class="save" id="fb-send">Send</button></div>`;
+  } else if (s.kind === "next") {
+    body = `${kick}<h2 class="big">${esc(s.title)}</h2>${points}${items}`;
+    reply = respondHtml(s, i);
+  } else {
+    body = `${kick}<h2 class="big">${esc(s.title)}</h2>${points}${items}`;
+    reply = respondHtml(s, i);
+  }
+  // two columns on a wide deck only when there is something to set beside the story: the engine's list, or a form
+  const panel = topPanel(s, i), two = panel || ["question", "feedback"].includes(s.kind);
+  return `<section class="slide ${esc(s.kind)}" style="${style}" data-i="${i}" ${s.id ? `data-qid="${esc(s.id)}"` : ""} aria-label="Slide ${i + 1} of ${total}"><div class="frame${two ? " two" : ""}"><div class="sbody">${body}</div><div class="side">${panel}${reply}</div></div></section>`;
+}
+
+function deckSlides() {
+  const st = S.story?.latest;
+  // The closing frame is the page's own: feedback on the whole story, for the storyteller and for every session.
+  if (st?.slides?.length) return [...st.slides, {kind: "feedback"}];
+  return [{kind: "cover", title: "No story yet", subtitle: "The engine writes one at the end of every run. To write one now, type /story in Claude Code."},
+          {kind: "next", title: "Meanwhile, everything is on the dashboard", points: ["Posts, themes, accounts and what we heard are one tap away."]}];
+}
+
+const V = {
+  story() {
+    const slides = deckSlides(), latest = S.story?.latest;
+    return `<div class="story"><div class="storybar" id="sbar"><div class="segs">${slides.map((_, i) => `<button data-slide="${i}" aria-label="Slide ${i + 1}"></button>`).join("")}</div>
+      <div class="row"><span id="scount">Story · 1 of ${slides.length}</span><button data-view="overview">Dashboard</button></div></div>
+      <button class="arrow prev" id="sprev" aria-label="Previous slide">‹</button><button class="arrow next" id="snext" aria-label="Next slide">›</button>
+      <div class="deck" id="deck">${slides.map((s, i) => slideHtml(s, i, slides.length, S.genome)).join("")}</div></div>`;
+  },
+
+  overview() {
+    const up = upcoming(), today = S.today, fortnight = up.filter(p => (p.date || "9999") <= plus(today, 13));
+    const waiting = up.filter(p => !p.decision && p.alpha_status === "proposed" && p.gate !== "block");
+    const thisWeek = waiting.filter(p => (p.date || "9999") <= plus(today, 6)).length;
+    const blocked = up.filter(p => p.gate === "block").length;
+    const cards = up.filter(p => p.motion.poster).length, owed = (S.engine?.motion_owed || []).filter(o => o.action === "storyboard").length;
+    const warm = (S.listening?.warmest || [])[0], next = fortnight[0], N = needs();
+    const strip = [...Array(14)].map((_, i) => {
+      const d = plus(today, i), ps = up.filter(p => p.date === d);
+      const k = ps.some(p => p.gate === "block") ? "stop" : ps.some(p => p.gate === "pass-with-edits") ? "warn" : ps.length ? "post" : "";
+      return `<div title="${esc(day(d))}: ${ps.length ? esc(ps.map(p => p.title).join(" · ")) : "no post"}"><div class="b ${k}"></div><div class="d">${new Date(d + "T12:00:00").toLocaleDateString(undefined, {weekday: "narrow"})}</div></div>`;
+    }).join("");
+    const tile = (label, value, note, go, extra = "") => `<button class="tile" data-go="${go}"><div class="label">${esc(label)}</div><div class="value">${value}</div>${extra}<div class="note">${note}</div></button>`;
+    const agenda = [...fortnight.map(p => ({date: p.date, post: p})),
+      ...(S.calendar?.ahead || []).filter(r => !r.engine && iso(r.date) <= plus(today, 13)).map(r => ({date: iso(r.date), row: r}))]
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    return `<div class="head"><h1>${greeting()} 👋</h1><span class="meta">Here is where things stand on ${esc(day(today))}.</span></div>
+      ${about(["This page is the quick look at everything. The big box counts the blog posts planned for the next two weeks; each little bar is one day (blue: a post, amber: a post with small fixes, red: a post the check stopped).",
+        "<b>Needs you</b> lists the things only a person can do. Click any box or line to go straight to it."],
+        [["Post", "A blog article the system wrote, with a short X version and a LinkedIn version."], ["The check", "An automatic reading of every post that stops anything we cannot prove yet."],
+         ["The desk", "The separate app where you approve, hold or edit posts."], ["Motion card", "A short video of a post's own lines, for X and LinkedIn."]])}
+      <div class="kpis">
+        <button class="tile hero" data-go="content"><div class="label">Posts planned for the next 14 days</div><div class="value">${fortnight.length}</div><div class="strip">${strip}</div><div class="note">${next ? `Next: ${esc(day(next.date))} · ${esc(next.title)}` : "Nothing planned yet."}</div></button>
+        ${tile("Waiting for your OK", waiting.length, `${thisWeek} of them this week`, "content")}
+        ${tile("Stopped by the check", blocked, blocked ? "open them in Posts" : "nothing stopped 🎉", "content")}
+        ${tile("Videos ready", `${cards}<span class="of"> of ${up.length}</span>`, `${owed} will be made on the next run`, "content", `<div class="meter"><span style="width:${up.length ? Math.round(cards / up.length * 100) : 0}%"></span></div>`)}
+        ${tile("Things we heard", (S.listening?.findings || []).length, warm ? `loudest topic: ${esc(warm.theme)}` : "no listening run yet", "listening")}
+        ${tile("Replies to post", (S.replies?.proposals || []).length, "you post them yourself", "replies")}
+        ${tile("Accounts we watch", (S.accounts?.watched || []).length, `${(S.suggested?.rows || []).length} suggestions waiting`, "suggested")}
+      </div>
+      <div class="cols" style="margin-top:16px">
+        <div><h2>Needs you <span class="sub">${N.length}</span></h2><div class="panel"><ul class="list">${N.length ? N.slice(0, 12).map(n => `<li><span class="dot ${n.k}"></span><span class="when">${n.d ? esc(day(n.d)) : ""}</span><span class="what"><div>${esc(n.t)}</div>${n.x ? `<div class="excerpt">${esc(clean(n.x))}</div>` : ""}</span><a class="go" href="#" data-go="${esc(n.go)}">open</a></li>`).join("") : `<li class="muted">Nothing is waiting for you. 🎉</li>`}</ul></div></div>
+        <div><h2>Coming up <span class="sub">the next 14 days</span></h2><div class="panel"><ul class="list">${agenda.length ? agenda.map(a => a.post
+          ? `<li><span class="when">${esc(day(a.date))}</span><span class="what"><div>${theme(a.post.theme)} ${esc(a.post.title)}</div><div class="excerpt">${esc(excerpt(a.post))}</div></span><a class="go" href="#" data-go="post:${esc(a.post.id)}">${check(a.post.gate)}</a></li>`
+          : `<li><span class="when">${esc(day(a.date))}</span><span class="what"><div>${chip(a.row.platform)} ${esc(a.row.title)}</div><div class="excerpt">${esc(clean(a.row.body))}</div></span>${chip(a.row.status)}</li>`).join("") : `<li class="muted">Nothing planned in the next two weeks.</li>`}</ul></div></div>
+      </div>
+      ${(() => { const Q = S.story?.questions || [], open = Q.filter(q => q.status === "open"), done = Q.filter(q => q.status === "answered").slice(-5).reverse();
+        return Q.length ? `<h2>Big questions <span class="sub">${open.length} open · ${Q.length - open.length} answered</span></h2><p class="hint">The story asks these; your answers are kept and the next story reads them.</p>
+        <div class="panel"><ul class="list qlist">${open.map(q => `<li><span class="dot info"></span><span class="what"><div class="q">${esc(q.question)}</div>${q.why ? `<div class="excerpt">${esc(q.why)}</div>` : ""}</span><a class="go" href="#" data-go="q:${esc(q.id)}">answer</a></li>`).join("")}
+        ${done.map(q => `<li><span class="dot good"></span><span class="what"><div class="q">${esc(q.question)}</div><div class="excerpt">✓ ${esc(q.answer)}</div></span><span class="when">${esc(day(q.answered_at))}</span></li>`).join("")}</ul></div>` : ""; })()}
+      <h2>Our themes at a glance</h2><p class="hint">Click a theme to change what the listener searches for.</p>
+      ${themeTable("ov-themes")}`;
+  },
+
+  content() {
+    const P = S.posts || {upcoming: [], past: []}, C = S.calendar || {}, st = C.strategy || {};
+    return `<div class="head"><h1>📝 Posts</h1><span class="meta">what is planned, what is open, what went out</span></div>
+      ${about(["Every blog post the system has written, by the day it is planned for. Click a post to read all of it: the full article, the short X and LinkedIn versions, the check's note and its video.",
+        "You approve, hold or edit a post on <b>the desk</b>, not here. Nothing on this page posts anything."],
+        [["✓ ready", "The check found nothing to fix."], ["! small fixes", "The check fixed or flagged small things; read its note before you approve."],
+         ["✕ stopped", "The post says something we cannot prove yet. It will not go out until it is fixed."], ["Waiting for you", "Nobody has approved or held it yet."],
+         ["Video", "The short motion card made from the post's own lines."]])}
+      <h2>Our planned posts</h2>
+      ${table("posts", {rows: P.upcoming, onRow: r => openPost(r), filters: [{key: "theme", label: "Theme"}, {key: r => CHECK[r.gate]?.[1] || "not checked", label: "Check"}, {key: r => WHERE[r.decision || r.alpha_status] || "", label: "Status"}],
+        text: r => r.post + " " + r.teaser_x,
+        cols: [{key: "date", label: "Day", render: r => esc(day(r.date))}, {key: "theme", label: "Theme", render: r => theme(r.theme)},
+          {key: "title", label: "Post", render: r => titled(r.title, excerpt(r))}, {key: "gate", label: "Check", render: r => check(r.gate)},
+          {key: r => r.decision || r.alpha_status, label: "Status", render: where},
+          {key: r => r.motion.poster ? "ready" : r.motion.storyboard ? "planned" : "none", label: "Video", render: r => r.motion.poster ? chip("▶ ready", "good") : r.motion.storyboard ? chip("planned") : `<span class="muted small">not yet</span>`}],
+        empty: "No posts planned from today on."})}
+      ${st.picks?.length ? `<h2>This week's blog picks <span class="sub">${esc(st.week || "")}</span></h2><p class="hint">The two blog slots the planner chose for this week, and why.</p>${table("picks", {rows: st.picks, search: false,
+        cols: [{key: "slot", label: "Slot"}, {key: "theme", label: "Theme", render: r => theme(r.theme)}, {key: "why", label: "Why this one", render: r => `<div class="tx small">${esc(r.why)}</div>`}, {key: "predicted", label: "Expected result"}]})}` : ""}
+      <h2>Still open in the content calendar</h2><p class="hint">Rows of the calendar notes that are dated in the past but never went out, so someone should finish, move or drop them. Built from the notes ${esc(when(C.taken_at)) || "never"}.</p>
+      ${table("cal-open", {rows: [...(C.ahead || []), ...(C.open_past || [])], onRow: r => openText(r.title, r.body, [chip(day(r.date)), chip(r.platform), chip(r.status), chip(r.stream)]),
+        filters: [{key: "status", label: "Status"}, {key: "platform", label: "Channel"}, {key: "stream", label: "Brand"}], text: r => r.body,
+        cols: [{key: r => iso(r.date), label: "Day", render: r => esc(day(r.date))}, {key: "platform", label: "Channel"}, {key: "status", label: "Status", render: r => chip(r.status, r.status === "Ready" ? "good" : "warning")},
+          {key: "stream", label: "Brand"}, {key: "title", label: "Post", render: r => titled(r.title, r.body)}, {key: r => r.engine ? "system" : "team", label: "Written by"}],
+        empty: "Nothing open in the calendar."})}
+      <h2>What went out</h2><p class="hint">Posts the sender put on X and LinkedIn, newest first.</p>
+      ${table("sends", {rows: C.sends || [], onRow: r => openText(r.title, r.body, [chip(when(r.at)), chip(r.platform), link(r.url, "open the post ↗")]), filters: [{key: "platform", label: "Channel"}], text: r => r.body,
+        cols: [{key: "at", label: "When", render: r => esc(when(r.at))}, {key: "platform", label: "Channel"}, {key: "title", label: "Post", render: r => titled(r.title, r.body)}, {key: "url", label: "Link", sort: false, render: r => link(r.url, "open ↗")}],
+        empty: "Nothing has been sent yet."})}
+      ${P.past.length ? `<h2>Our posts whose day has passed</h2><p class="hint">Planned for an earlier day and never published. Move them to a new day on the desk, or drop them.</p>${table("past", {rows: P.past, onRow: r => openPost(r), filters: [{key: r => CHECK[r.gate]?.[1] || "not checked", label: "Check"}], text: r => r.post,
+        cols: [{key: "date", label: "Day", render: r => esc(day(r.date))}, {key: "theme", label: "Theme", render: r => theme(r.theme)}, {key: "title", label: "Post", render: r => titled(r.title, excerpt(r))}, {key: "gate", label: "Check", render: r => check(r.gate)}, {key: r => r.decision || r.alpha_status, label: "Status", render: where}]})}` : ""}`;
+  },
+
+  themes() {
+    const T = S.themes || {rows: []};
+    return `<div class="head"><h1>🏷️ Themes</h1><span class="meta">${T.rows.length} topics we want to be known for</span><span class="actions"><button class="primary" id="theme-new">+ Add a theme</button></span></div>
+      ${about(["A theme is a topic we want people to connect with us, written as a hashtag. For each one you see how freely we may talk about it, how many posts are planned and what the listener heard about it.",
+        "Click a theme to change what the listener looks for on X. Add a new theme with the button: it starts as <b>not yet</b>, which means posts may only talk about the general idea until someone checks what we can prove and upgrades it in themes.md."],
+        [["Free to use", "We can talk about this topic freely."], ["Careful wording", "We may talk about it, but only with the careful wording written down for it."],
+         ["Not yet", "Only the general idea. Nothing about what we do, no partner, no date."], ["X search", "The words the listener types into X search every day for this theme."],
+         ["Keywords", "Words that make a post count as on-topic when the listener scores what it found."], ["Loudness", "How much on-topic talk the last listening run found (higher is louder)."]])}
+      ${themeTable("themes")}
+      ${T.mentions ? `<h2>How we listen for our own name</h2><p class="hint">The X search the listener runs to catch anyone mentioning us.</p><div class="panel mono">${esc(T.mentions)}</div>` : ""}
+      ${T.term_log?.length ? `<h2>Recent changes to the searches</h2><div class="panel"><ul class="list">${T.term_log.map(l => `<li><span class="what small">${esc(l)}</span></li>`).join("")}</ul></div>` : ""}`;
+  },
+
+  accounts() {
+    const A = S.accounts || {};
+    const st = r => chip(r.status === "verified" ? "✓ confirmed" : r.status === "collect" ? "to confirm" : r.status, r.status === "verified" ? "good" : r.status === "collect" ? "warning" : "");
+    return `<div class="head"><h1>👥 Accounts</h1><span class="meta">who we keep an eye on</span></div>
+      ${about(["The accounts the listener follows. <b>Watched accounts</b> are yours: add any X account here and the listener checks its posts on every run. Remove it when it stops being useful.",
+        `Our own channels, partners and standards bodies come from our handles list (handles.md). They change there, not here. We also keep a private list of names we must not mention yet; it is ${A.private?.present ? `in place (${A.private.terms} names), and never shown here` : "<b>missing</b>, so every post is stopped until it is restored"}.`],
+        [["To confirm", "We think this is the right account but nobody has checked the live profile yet."], ["Confirmed", "Someone checked the live profile."],
+         ["Partner", "An organisation we may tag in posts, because they cleared it."], ["Standards body", "An organisation we may quote, never claim as a partner."]])}
+      <h2>Accounts we watch <span class="sub">${(A.watched || []).length} of ${A.watch_max}</span></h2>
+      ${table("watched", {rows: A.watched || [], filters: [{key: "themes", label: "Theme"}, {key: "from", label: "Added from"}], empty: "No watched accounts yet. Type one in the row below, or watch one from Suggestions.",
+        add: {label: "Watch an account", fields: [{key: "handle", placeholder: "@account", width: 160}, {key: "themes", placeholder: "#Theme (optional)", width: 200}, {key: "note", placeholder: "why we watch it (optional)", width: 260}],
+              submit: v => act("/api/watch", {handle: v.handle, themes: (v.themes || "").split(",").map(s => s.trim()).filter(Boolean), note: v.note, base: A.watch_base}, `${v.handle} is now watched`)},
+        cols: [{key: "handle", label: "Account", render: r => link(xurl(r.handle), r.handle)}, {key: "themes", label: "Themes", render: r => (r.themes || []).map(theme).join(" ")},
+          {key: "note", label: "Why"}, {key: "added", label: "Added"}, {key: "from", label: "Added from"},
+          {key: "x", label: "", sort: false, render: r => `<button class="ghost" data-unwatch="${esc(r.handle)}">Stop watching</button>`}]})}
+      <h2>Partners</h2><p class="hint">Organisations that cleared us to name and tag them.</p>
+      ${table("partners", {rows: A.partners || [], filters: [{key: "status", label: "Status"}, {key: "clearance", label: "Clearance"}],
+        cols: [{key: "partner", label: "Partner"}, {key: "x", label: "On X"}, {key: "linkedin", label: "On LinkedIn"}, {key: "themes", label: "Themes", render: r => `<span class="small">${esc(r.themes)}</span>`}, {key: "status", label: "Status", render: st}, {key: "last_verified", label: "Last checked"}]})}
+      <h2>Our own channels</h2>
+      ${table("own", {rows: A.own || [], search: false,
+        cols: [{key: "brand", label: "Brand"}, {key: "platform", label: "Channel"}, {key: "handle", label: "Account"}, {key: "status", label: "Status", render: st}, {key: "last_verified", label: "Last checked"}]})}
+      <h2>Standards bodies</h2><p class="hint">We quote them; we never call them partners.</p>
+      ${table("standards", {rows: A.standards || [], search: false,
+        cols: [{key: "body", label: "Organisation"}, {key: "x", label: "On X"}, {key: "themes", label: "Themes"}, {key: "status", label: "Status", render: st}, {key: "last_verified", label: "Last checked"}]})}`;
+  },
+
+  suggested() {
+    const G = S.suggested || {rows: []}, D = S.accounts?.dismissed || [];
+    return `<div class="head"><h1>✨ Suggestions</h1><span class="meta">${G.rows.length} accounts worth a look</span></div>
+      ${about([`Accounts that posted about our themes at least ${G.min_hits} times in the last ${G.days} days, and that we do not watch yet. Click one to read the posts that put it here.`,
+        "<b>Watch</b> the useful ones and the listener will follow them. <b>Dismiss</b> the noise and it will not be suggested again. Nothing is saved about an account until you choose."],
+        [["Seen", "How many of its posts the listener found on our themes."], ["Engagement", "Likes, reposts and replies on those posts, added up."]])}
+      ${table("suggested", {rows: G.rows, onRow: r => openSuggestion(r), filters: [{key: "themes", label: "Theme"}], text: r => r.samples.map(s => s.text).join(" "),
+        empty: "No suggestions right now: every busy account is already watched or dismissed.",
+        cols: [{key: "handle", label: "Account", render: r => `${link(xurl(r.handle), r.handle)}<div class="small muted">${esc(r.name)}</div>`}, {key: "hits", label: "Seen", num: true, render: r => `${r.hits}×`},
+          {key: "themes", label: "Themes", render: r => r.themes.map(theme).join(" ")}, {key: "followers", label: "Followers", num: true, render: r => fmt(r.followers)},
+          {key: "engagement", label: "Engagement", num: true}, {key: r => r.samples[0]?.text || "", label: "What it posted", sort: false, render: r => `<div class="tx excerpt">${esc(clean(r.samples[0]?.text))}</div>`},
+          {key: "x", label: "", sort: false, render: r => `<span style="white-space:nowrap"><button class="primary" data-watch="${esc(r.handle)}" data-themes="${esc(r.themes.join(","))}">Watch</button> <button data-dismiss="${esc(r.handle)}">Dismiss</button></span>`}]})}
+      ${D.length ? `<h2>Dismissed <span class="sub">${D.length}</span></h2><p class="hint">Accounts you dismissed. Bring one back if you change your mind.</p>${table("dismissed", {rows: D, search: false,
+        cols: [{key: "handle", label: "Account", render: r => link(xurl(r.handle), r.handle)}, {key: "at", label: "Dismissed on"}, {key: "x", label: "", sort: false, render: r => `<button class="ghost" data-undismiss="${esc(r.handle)}">Suggest again</button>`}]})}` : ""}`;
+  },
+
+  listening() {
+    const L = S.listening || {};
+    return `<div class="head"><h1>👂 What we heard</h1><span class="meta">${L.window ? `from ${esc(L.window.from)} to ${esc(L.window.to)}` : "no listening run yet"}</span></div>
+      ${about(["Every weekday the listener searches X for our themes, our name and the accounts we watch, then picks out what matters. Each finding says what it is and whether it could become a post or a reply.",
+        "Click a finding to see the posts it is based on."],
+        [["Finding", "Something the listener thinks we should know, with its sources."], ["Content", "It could feed a blog post."], ["Conversation", "It could be worth a reply."],
+         ["Fresh until", "After this day it is old news."], ["Held slot", "A free slot kept for urgent news; it opens only when an official document changes the rules."]])}
+      ${L.summary ? `<h2>In short</h2><div class="panel">${esc(L.summary)}</div>` : ""}
+      <h2>Findings</h2>
+      ${table("findings", {rows: L.findings || [], onRow: r => openFinding(r), filters: [{key: "theme", label: "Theme"}, {key: "shape", label: "Kind"}], text: r => (r.evidence || []).map(e => e.quote + " " + e.text).join(" "),
+        cols: [{key: "theme", label: "Theme", render: r => theme(r.theme)}, {key: "finding", label: "What we heard", render: r => `<div class="tx">${esc(r.finding)}</div>${(r.evidence || [])[0]?.quote ? `<div class="quote">“${esc(r.evidence[0].quote)}”</div>` : ""}`},
+          {key: "shape", label: "Kind"}, {key: r => Number(r.relevance) || 0, label: "Relevance", num: true, render: r => esc(r.relevance)},
+          {key: "freshness_deadline", label: "Fresh until", render: r => esc(r.freshness_deadline ? day(r.freshness_deadline) : "")}],
+        empty: "Nothing new heard."})}
+      ${L.warmest?.length ? `<h2>Loudest themes</h2>${table("warm", {rows: L.warmest, search: false,
+        cols: [{key: "theme", label: "Theme", render: r => theme(r.theme)}, {key: "relevance", label: "Loudness", num: true}, {key: "count", label: "Posts found", num: true}, {key: "why", label: "Why", render: r => `<div class="tx small">${esc(r.why)}</div>`}]})}` : ""}
+      ${L.held_slot ? `<h2>Urgent slot</h2><div class="panel small">${L.held_slot.triggered ? chip("✕ opened", "critical") : chip("closed")} ${esc(L.held_slot.reason || "")}</div>` : ""}
+      ${L.held_for_person?.length ? `<h2>For a person to check</h2><div class="panel"><ul class="list">${L.held_for_person.map(h => `<li><span class="dot info"></span><span class="what small">${esc(typeof h === "string" ? h : JSON.stringify(h))}</span></li>`).join("")}</ul></div>` : ""}
+      ${L.mentions_note ? `<h2>Mentions of us</h2><div class="panel small">${esc(L.mentions_note)}</div>` : ""}`;
+  },
+
+  replies() {
+    const R = S.replies || {};
+    return `<div class="head"><h1>💬 Replies</h1><span class="meta">${(R.proposals || []).length} written for you</span></div>
+      ${about(["Replies the system wrote for other people's posts. It never posts them. Read their post, copy our reply, open the post and reply as yourself, or skip it."])}
+      ${(R.proposals || []).map(p => `<div class="panel" style="margin-bottom:12px"><div style="display:flex;gap:6px;flex-wrap:wrap">${theme(p.theme)}${chip(p.platform)}${chip(p.tier)}</div>
+        <label class="f">Their post${p.target_title ? `: ${esc(p.target_title)}` : ""}</label>${p.target_text ? `<div class="body">${esc(p.target_text)}</div>` : `<div class="small muted">The listener did not keep its text; open it to read it.</div>`}
+        <label class="f">Our reply</label><div class="body">${esc(p.draft_comment)}</div>
+        <div class="small muted" style="margin-top:8px">Why: ${esc(p.why)}</div>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center"><button class="primary" data-copy="${esc(p.draft_comment)}">Copy our reply</button>${link(p.target_url, "Open their post ↗")}</div></div>`).join("") || `<div class="panel muted">No replies waiting. 🎉</div>`}
+      ${R.inbound?.note ? `<h2>Replies to our own posts</h2><div class="panel small">${esc(R.inbound.note)}</div>` : ""}`;
+  },
+
+  claims() {
+    const C = S.claims || {};
+    return `<div class="head"><h1>🔎 Claim ideas</h1><span class="meta">${(C.watch || []).length} ideas · ${C.register} facts already approved</span></div>
+      ${about(["Things the research found that we might be able to say about ourselves one day, with the source each one came from.",
+        `They are only ideas. A post may only use facts from our approved list (${C.register} so far). An idea joins that list only after someone checks its source in the memory update; this page never adds one.`],
+        [["Grade", "How strong the proof is."], ["Tier", "What kind of source it is, for example a regulator's own document or a news story."],
+         ["Corroboration", "Whether a second, independent source says the same."]])}
+      ${table("claims", {rows: C.watch || [], filters: [{key: "theme", label: "Theme"}, {key: "grade", label: "Grade"}, {key: "tier", label: "Tier"}, {key: "corroboration", label: "Corroboration"}],
+        cols: [{key: "date", label: "Found"}, {key: "theme", label: "Theme", render: r => theme(r.theme)}, {key: "claim", label: "What it says", render: r => `<div class="tx">${esc(r.claim)}</div>`},
+          {key: "source", label: "Source", render: r => link(r.url, r.source)}, {key: "tier", label: "Tier"}, {key: "grade", label: "Grade", render: r => chip(r.grade)}, {key: "corroboration", label: "Corroboration"}],
+        empty: "No claim ideas right now."})}
+      ${C.review?.length ? `<h2>Posts that rely on a fact that changed</h2>${table("review", {rows: C.review, cols: [{key: r => r.id || r.title, label: "Post"}, {key: r => r.reason || r.why || JSON.stringify(r), label: "What changed"}]})}` : ""}`;
+  },
+
+  learning() {
+    const L = S.learning || {};
+    const P = L.predictions || [];
+    return `<div class="head"><h1>📈 Results</h1><span class="meta">${P.filter(p => p.actual != null).length} of ${P.length} guesses checked</span></div>
+      ${about(["Before a post goes out, the system guesses how it will do: below usual, usual, or above usual. Once the post is out, it checks. Over time this shows which kinds of posts work.",
+        "Few results so far: the comparison needs posts that are out and have been measured."],
+        [["Guess", "Below, usual or above: how the system expects the post to do."], ["Actual", "How it really did, filled in after it went out."], ["Idea being tested", "The one thing this post tries differently."]])}
+      <h2>The scorecard</h2>
+      ${table("score", {rows: L.rows || [], search: false,
+        cols: [{key: "row", label: "Measure"}, {key: "value", label: "Value", num: true, render: r => esc(r.value ?? "—")}, {key: "records", label: "Based on", num: true},
+          {key: "status", label: "Status", render: r => chip(r.status, r.status === "live" ? "good" : r.status === "blank" ? "" : "warning")}, {key: "note", label: "What it means", render: r => `<div class="tx small">${esc(r.note)}</div>`}]})}
+      <h2>Guesses and results</h2>
+      ${table("predictions", {rows: P, filters: [{key: "theme", label: "Theme"}, {key: "platform", label: "Channel"}, {key: "predicted", label: "Guess"}],
+        cols: [{key: r => iso(r.predicted_at), label: "Made"}, {key: "theme", label: "Theme", render: r => theme(r.theme)}, {key: "platform", label: "Channel"},
+          {key: "hypothesis", label: "Idea being tested", render: r => `<div class="tx small">${esc(r.hypothesis)}</div>`}, {key: "predicted", label: "Guess"}, {key: "actual", label: "Actual", render: r => esc(r.actual ?? "not yet")}]})}
+      ${L.key_results?.length ? `<h2>Our goals</h2>${table("krs", {rows: L.key_results, filters: [{key: "objective", label: "Goal"}], cols: [{key: "objective", label: "Goal"}, {key: "key_result", label: "How we know"}]})}` : ""}`;
+  },
+
+  engine() {
+    const E = S.engine || {};
+    return `<div class="head"><h1>⚙️ System</h1><span class="meta">what runs on this computer</span></div>
+      ${about(["The jobs that run on a schedule on this Mac: listening, writing, checking, sending, scoring. This page only shows them; they are switched on and off with the engine console (/engine)."])}
+      <h2>Scheduled jobs</h2>
+      ${table("jobs", {rows: E.jobs || [], search: false,
+        cols: [{key: r => r.job || r.label, label: "Job", render: r => `<span class="mono">${esc(r.job || r.label)}</span>`}, {key: r => r.loaded === undefined ? "" : r.loaded ? "on" : "off", label: "Switched on", render: r => r.loaded === undefined ? "" : r.loaded ? chip("✓ on", "good") : chip("! off", "warning")},
+          {key: "last_run", label: "Last ran"}, {key: "what", label: "What it does", render: r => `<div class="tx small">${esc(r.what)}</div>`}]})}
+      <h2>Videos the next run will make</h2>
+      ${table("owed", {rows: E.motion_owed || [], search: false, empty: "Every planned post has its video.",
+        cols: [{key: "id", label: "Post", render: r => `<span class="mono">${esc(r.id)}</span>`}, {key: "action", label: "Needs", render: r => chip(r.action === "storyboard" ? "a video plan" : "a render")}, {key: "reason", label: "Why"}]})}
+      <h2>What ran lately</h2>
+      ${table("runs", {rows: E.runs || [], filters: [{key: "step", label: "Step"}],
+        cols: [{key: "at", label: "When", render: r => esc(when(r.at))}, {key: "step", label: "Step", render: r => chip(r.step)}, {key: "detail", label: "What happened", render: r => `<div class="tx small">${esc(r.detail)}</div>`}]})}`;
+  },
+};
+
+function themeTable(id) {
+  const T = S.themes || {rows: []};
+  return table(id, {rows: T.rows, onRow: r => editTheme(r.tag), filters: [{key: r => LICENCE[r.licence]?.[1] || r.licence, label: "Allowed"}], text: r => r.what + " " + r.different,
+    empty: "No themes yet. Add the first one with the button above.",
+    cols: [{key: "tag", label: "Theme", render: r => `${theme(r.tag)}<div class="excerpt" style="max-width:420px">${esc(r.what)}</div>`}, {key: "licence", label: "Allowed", render: r => licence(r.licence)},
+      {key: r => r.upcoming.length, label: "Posts planned", num: true}, {key: r => r.findings.length, label: "Heard", num: true},
+      {key: r => r.warmth?.relevance ?? null, label: "Loudness", num: true, render: r => esc(r.warmth?.relevance ?? "—")},
+      {key: r => r.keywords.length, label: "Keywords", num: true}]});
+}
+
+// ── drawers ────────────────────────────────────────────────────────────
+function openText(title, text, chips) {
+  openDrawer(title, `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;align-items:center">${(chips || []).join("")}</div>
+    <label class="f">The post</label>${text ? `<div class="body long">${esc(text)}</div>` : `<div class="small muted">No text was kept for this one.</div>`}`);
+}
+function openPost(p) {
+  const m = p.motion;
+  openDrawer(p.title, `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">${chip(day(p.date))}${theme(p.theme)}${check(p.gate)}${where(p)}</div>
+    <p><a href="${DESK}/item/${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Approve, hold or edit it on the desk ↗</a></p>
+    ${p.note_for_alpha ? `<label class="f">What the check says</label><div class="body">${esc(p.note_for_alpha)}</div>` : ""}
+    ${p.teaser_x ? `<label class="f">The X version</label><div class="body">${esc(p.teaser_x)}</div>` : ""}
+    ${p.teaser_linkedin ? `<label class="f">The LinkedIn version</label><div class="body">${esc(p.teaser_linkedin)}</div>` : ""}
+    <label class="f">The full blog post</label>${p.post ? `<div class="body long">${esc(p.post)}</div>` : `<div class="small muted">Not written yet.</div>`}
+    <label class="f">Video</label>${m.poster ? `<div class="media"><video controls preload="metadata" poster="/media/${esc(m.poster)}" ${m.video ? `src="/media/${esc(m.video)}"` : ""}></video></div>` : `<div class="small muted">${m.storyboard ? "Planned, not made on this computer yet." : "Not made yet: the next run makes it, or type /motion " + esc(p.id)}</div>`}
+    ${p.hypothesis ? `<label class="f">What this post tests · expected result: ${esc(p.predicted)}</label><div class="small">${esc(p.hypothesis)}</div>` : ""}
+    <label class="f">Link</label><div class="small">${link(p.cta)}</div>`);
+}
+
+let editing = null;
+function editTheme(tag) {
+  const t = (S.themes?.rows || []).find(r => r.tag === tag); if (!t) return;
+  editing = {tag, keywords: [...t.keywords]};
+  openDrawer(tag, `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">${licence(t.licence)}${chip(`${t.upcoming.length} posts planned`)}${chip(`${t.findings.length} heard`)}</div>
+    <p>${esc(t.what)}</p>${t.different ? `<p class="small muted">Why it is ours: ${esc(t.different)}</p>` : ""}
+    <label class="f" for="tq">What the listener searches on X <span id="tqn">${t.x_search.length}/${S.themes.x_query_max}</span></label>
+    <textarea id="tq" maxlength="${S.themes.x_query_max}">${esc(t.x_search)}</textarea>
+    <div class="help">Use quotes for exact phrases, OR between choices, lang:en for English and -filter:replies to skip replies.</div>
+    <label class="f">Keywords that make a post count as on-topic <span class="muted">· type one and press Enter</span></label>
+    <div class="tags" id="kw"></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:16px"><button class="primary" id="tsave">Save</button><span class="small muted">the next listening run uses it</span></div>
+    ${t.signal?.note ? `<label class="f">What the last listening run said</label><div class="small">${esc(t.signal.note)}</div>` : ""}`);
+  drawKeywords();
+}
+function newTheme() {
+  editing = {tag: null, keywords: []};
+  openDrawer("Add a theme", `<p class="small">A theme is a topic we want to be known for. It starts as <b>not yet</b>: posts under it talk about the general idea only, never about what we do, until someone checks what we can prove and upgrades it in themes.md.</p>
+    <label class="f" for="nt">Hashtag</label><input id="nt" class="wide" placeholder="#TokenisedDeposits">
+    <label class="f" for="nw">What it is, in one sentence</label><input id="nw" class="wide" maxlength="220" placeholder="Bank deposits that move on a blockchain without leaving the bank.">
+    <label class="f" for="nd">Why it is ours (optional)</label><input id="nd" class="wide" maxlength="300" placeholder="What we can say about it that others cannot.">
+    <label class="f" for="tq">What the listener searches on X <span id="tqn">0/${S.themes.x_query_max}</span></label>
+    <textarea id="tq" maxlength="${S.themes.x_query_max}" placeholder='("tokenised deposits" OR "deposit token") lang:en -filter:replies'></textarea>
+    <div class="help">Use quotes for exact phrases, OR between choices, lang:en for English and -filter:replies to skip replies.</div>
+    <label class="f">Keywords that make a post count as on-topic <span class="muted">· type one and press Enter</span></label>
+    <div class="tags" id="kw"></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:16px"><button class="primary" id="tcreate">Add the theme</button><span class="small muted">the listener starts on it at its next run (one more X search, a few cents)</span></div>`);
+  drawKeywords();
+}
+function drawKeywords() {
+  const box = document.getElementById("kw"); if (!box) return;
+  box.innerHTML = editing.keywords.map((k, i) => `<span class="chip">${esc(k)}<button data-kwdel="${i}" aria-label="Remove ${esc(k)}">×</button></span>`).join("") + `<input id="kwin" placeholder="add a keyword" aria-label="Add a keyword">`;
+}
+function takeKeyword() {
+  const i = document.getElementById("kwin"); const v = (i?.value || "").trim().toLowerCase();
+  if (v && !editing.keywords.includes(v)) editing.keywords.push(v);
+}
+
+function openSuggestion(r) {
+  openDrawer(r.handle, `<p class="small muted">${esc(r.name)} · ${fmt(r.followers)} followers · seen ${r.hits}× · ${r.themes.map(theme).join(" ")}</p>
+    <label class="f">The posts that put it here</label>
+    ${r.samples.map(s => `<div class="body" style="margin-bottom:8px">${esc(s.text)}<div class="small" style="margin-top:6px">${theme(s.theme)} ${link(s.url, "open ↗")}</div></div>`).join("")}
+    <div style="display:flex;gap:8px;margin-top:12px;align-items:center"><button class="primary" data-watch="${esc(r.handle)}" data-themes="${esc(r.themes.join(","))}">Watch</button><button data-dismiss="${esc(r.handle)}">Dismiss</button>${link(xurl(r.handle), "Profile ↗")}</div>`);
+}
+
+function openFinding(f) {
+  openDrawer(`${f.theme} · ${f.id}`, `<p>${esc(f.finding)}</p>
+    ${(f.evidence || []).length ? `<label class="f">The posts it is based on</label>${f.evidence.map(e => `<div class="body" style="margin-bottom:8px"><div class="small t">${esc(e.title)}</div>${e.quote ? `<div class="quote">“${esc(e.quote)}”</div>` : ""}${e.text && e.text !== e.quote ? `<div class="small">${esc(e.text)}</div>` : ""}<div class="small" style="margin-top:4px">${link(e.url, "open ↗")}</div></div>`).join("")}` : ""}
+    <label class="f">Could it become a post?</label><div class="small"><b>${esc(f.content)}</b> ${esc(f.content_note)}</div>
+    <label class="f">Is it worth a reply?</label><div class="small"><b>${esc(f.conversation)}</b> ${esc(f.conversation_note)}</div>`);
+}
+
+// ── render and events ──────────────────────────────────────────────────
+const TABS = ["story", "overview", "content", "themes"];
+function counts() {
+  return {content: upcoming().length, themes: S.themes?.rows?.length, accounts: S.accounts?.watched?.length, suggested: S.suggested?.rows?.length,
+    listening: S.listening?.findings?.length, replies: S.replies?.proposals?.length, claims: S.claims?.watch?.length, overview: needs().length,
+    story: (S.story?.questions || []).filter(q => q.status === "open").length};
+}
+function render() {
+  const n = counts();
+  document.getElementById("nav").innerHTML = VIEWS.map(([k, icon, label]) => `<li><button data-view="${k}" ${k === view ? 'aria-current="page"' : ""}><span class="i">${icon}</span>${label}<span class="n">${n[k] || ""}</span></button></li>`).join("");
+  const badge = k => (k === "story" || k === "overview") && n[k] ? `<span class="badge">${n[k]}</span>` : "";
+  const inMore = !TABS.includes(view);
+  document.getElementById("tabbar").innerHTML = TABS.map(k => { const [, icon, label] = VIEWS.find(v => v[0] === k);
+    return `<button data-view="${k}" ${k === view ? 'aria-current="page"' : ""}><span class="i">${icon}</span>${label}${badge(k)}</button>`; }).join("")
+    + `<button id="more" ${inMore ? 'aria-current="page"' : ""}><span class="i">☰</span>More</button>`;
+  for (const k in TABLES) delete TABLES[k];
+  document.body.classList.toggle("immersive", view === "story");
+  const errors = S.errors?.length ? `<div class="errors">Some files could not be read: ${S.errors.map(esc).join(" · ")}</div>` : "";
+  const here = VIEWS.find(v => v[0] === view) || VIEWS[1];
+  const top = `<header class="topbar"><span class="t"><span aria-hidden="true">${here[1]}</span>${esc(here[2])}</span><span class="m">${esc(S.genome?.name || S.stream)} · ${esc(when(S.built_at))}</span></header>`;
+  const main = document.getElementById("main");
+  main.classList.toggle("full", view === "story");
+  main.innerHTML = (view === "story" ? "" : top + errors) + (V[view] || V.overview)();
+  Object.keys(TABLES).forEach(drawTable);
+  if (view === "story") setupDeck();
+}
+function openSheet() {
+  const n = counts();
+  const sheet = document.getElementById("sheet");
+  sheet.innerHTML = `<div class="grab"></div><h3>Everything else</h3><div class="grid">${VIEWS.filter(v => !TABS.includes(v[0])).map(([k, icon, label]) =>
+    `<button data-view="${k}"><span class="i">${icon}</span>${label}${n[k] ? `<span class="n">${n[k]}</span>` : ""}</button>`).join("")}
+    <button data-desk="1"><span class="i">🗂️</span>The desk ↗</button></div>`;
+  sheet.classList.add("on"); sheet.setAttribute("aria-hidden", "false"); document.getElementById("veil").classList.add("on");
+}
+function closeSheet() { const sh = document.getElementById("sheet"); sh.classList.remove("on"); sh.setAttribute("aria-hidden", "true"); }
+function setupDeck() {
+  const deck = document.getElementById("deck"); if (!deck) return;
+  const n = deck.children.length, bar = document.getElementById("sbar");
+  const mark = () => { const i = Math.round(deck.scrollLeft / Math.max(deck.clientWidth, 1)); slideAt = i;
+    document.querySelectorAll("#sbar .segs button").forEach((b, j) => { b.classList.toggle("on", j === i); b.classList.toggle("done", j < i); });
+    const sl = deck.children[i]; if (sl && bar) bar.style.color = getComputedStyle(sl).color;
+    const cnt = document.getElementById("scount"); if (cnt) cnt.textContent = `Story · ${i + 1} of ${n}`; };
+  let ticking = false;  // follow the slide on every frame while scrolling, and once more when it settles
+  deck.addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { mark(); ticking = false; }); }
+    clearTimeout(mark.h); mark.h = setTimeout(mark, 120); }, {passive: true});
+  deck.addEventListener("scrollend", mark);
+  fitSlides();
+  document.fonts?.ready?.then(fitSlides);
+  deck.style.scrollBehavior = "auto"; deck.scrollLeft = Math.min(slideAt, n - 1) * deck.clientWidth; deck.style.scrollBehavior = "";
+  mark();
+}
+function fitSlides() {
+  const deck = document.getElementById("deck"); if (!deck) return;
+  deck.classList.toggle("wide", deck.clientWidth >= 900);
+  deck.querySelectorAll(".slide").forEach(sl => {
+    let f = 1; sl.style.setProperty("--fit", "1");
+    for (let k = 0; k < 7 && sl.scrollHeight > sl.clientHeight + 1; k++) { f -= 0.05; sl.style.setProperty("--fit", f.toFixed(2)); }
+  });
+}
+function toSlide(i) { const deck = document.getElementById("deck"); if (!deck) return; i = Math.max(0, Math.min(i, deck.children.length - 1)); deck.scrollTo({left: i * deck.clientWidth}); }
+const advance = () => setTimeout(() => toSlide(slideAt + 1), 420);
+function respond(i, action, text, item = null, move = true) {
+  return act("/api/respond", {run_id: S.story?.latest?.run_id, slide: i, action, text, item, base: S.story?.responses_base}, "Noted. The next story reads it.")
+    .then(ok => { if (ok) { redo.delete(i); redo.delete(`${i}:${item}`); if (move) advance(); } return ok; });
+}
+function go(target) {
+  const [kind, id] = target.split(":");
+  if (!id) { if (kind !== view) slideAt = 0; view = kind; store.set("view", view); render(); window.scrollTo(0, 0); return; }
+  if (kind === "view") { view = id; store.set("view", view); render(); window.scrollTo(0, 0); }
+  else if (kind === "q") { view = "story"; const i = deckSlides().findIndex(s => s.id === id); slideAt = i < 0 ? 0 : i; render(); window.scrollTo(0, 0); }
+  else if (kind === "post") { const p = [...upcoming(), ...(S.posts?.past || [])].find(x => x.id === id); if (p) openPost(p); }
+}
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("button, a[data-go], tr[data-dt-row], th[data-dt-sort], #veil");
+  if (!el) return;
+  if (el.id === "veil" || el.id === "dclose") { closeSheet(); return closeDrawer(); }
+  if (el.dataset.view) { closeSheet(); document.getElementById("veil").classList.remove("on"); return go(el.dataset.view); }
+  if (el.dataset.go) { e.preventDefault(); return go(el.dataset.go); }
+  if (el.dataset.dtSort) { const st = DT[el.dataset.dtSort], i = +el.dataset.i; st.dir = st.sort === i ? -st.dir : 1; st.sort = i; saveTables(); return drawTable(el.dataset.dtSort); }
+  if (el.dataset.dtRow) { if (e.target.closest("a, button")) return; return TABLES[el.dataset.dtRow].onRow(TABLES[el.dataset.dtRow].rows[+el.dataset.ri]); }
+  if (el.dataset.dtAdd) {
+    const id = el.dataset.dtAdd, v = {};
+    document.querySelectorAll(`input[data-add="${id}"]`).forEach(i => v[i.dataset.k] = i.value.trim());
+    return TABLES[id].add.submit(v);
+  }
+  if (el.id === "theme-new") return newTheme();
+  if (el.id === "more") return openSheet();
+  if (el.dataset.desk) { closeSheet(); document.getElementById("veil").classList.remove("on"); return window.open(DESK, "_blank", "noopener"); }
+  if (el.id === "sprev") return toSlide(slideAt - 1);
+  if (el.id === "snext") return toSlide(slideAt + 1);
+  if (el.dataset.slide !== undefined) return toSlide(+el.dataset.slide);
+  if (el.dataset.redo !== undefined) { redo.add(/:/.test(el.dataset.redo) ? el.dataset.redo : +el.dataset.redo); return render(); }
+  if (el.dataset.opt) {
+    document.querySelectorAll(`button[data-opt="${el.dataset.opt}"]`).forEach(b => b.classList.toggle("on", b === el));
+    const box = document.getElementById("ans-" + el.dataset.opt); if (box) box.value = el.dataset.text; return;
+  }
+  if (el.dataset.answer) {
+    const id = el.dataset.answer, text = document.getElementById("ans-" + id)?.value || "", at = slideAt;
+    return act("/api/answer", {id, answer: text, base: S.story.questions_base}, "Saved. The next story reads your answer.").then(ok => { if (ok) { redo.delete(at); advance(); } });
+  }
+  if (el.dataset.act !== undefined) { const i = +el.dataset.act; return respond(i, el.dataset.a, document.getElementById("note-" + i)?.value || ""); }
+  if (el.dataset.send !== undefined) {
+    const i = +el.dataset.send, t = document.getElementById("note-" + i)?.value || "";
+    if (!t.trim()) { toast("Write a few words first, or tap one of the buttons"); return; }
+    return respond(i, "", t);
+  }
+  if (el.dataset.additem || el.dataset.skipitem) {
+    const [i, j] = (el.dataset.additem || el.dataset.skipitem).split(":").map(Number), o = (deckSlides()[i]?.items || [])[j] || {};
+    if (el.dataset.skipitem) return respond(i, "Skip", "", j, false);
+    if (o.handle) return act("/api/watch", {handle: o.handle, themes: [], note: o.why || "", from: "story", base: S.accounts.watch_base}, `${o.handle} is now watched`)
+      .then(ok => ok && respond(i, `Watched ${o.handle}`, "", j, false));
+    if (o.kind === "theme" && o.tag) return respond(i, `Adding ${o.tag}`, "", j, false).then(ok => {
+      if (!ok) return; newTheme(); document.getElementById("nt").value = o.tag; document.getElementById("nw").value = o.text || ""; });
+    return respond(i, "Add it", "", j, false);
+  }
+  if (el.dataset.rate) { document.querySelectorAll("button[data-rate]").forEach(b => b.classList.toggle("on", b === el)); return; }
+  if (el.id === "fb-send") {
+    const rating = document.querySelector("button[data-rate].on")?.dataset.rate || "", at = slideAt;
+    return act("/api/feedback", {run_id: S.story?.latest?.run_id, rating, next: document.getElementById("fb-next").value,
+      remember: document.getElementById("fb-rem").value, base: S.story.feedback_base}, "Thank you. The next story reads this.").then(ok => ok && redo.delete(at) && render());
+  }
+  if (el.dataset.watch) return act("/api/watch", {handle: el.dataset.watch, themes: el.dataset.themes.split(",").filter(Boolean), from: el.dataset.respond ? "story" : "suggestion", base: S.accounts.watch_base}, `${el.dataset.watch} is now watched`)
+    .then(ok => { if (!ok) return; closeDrawer(); if (el.dataset.respond) { const [i, j] = el.dataset.respond.split(":").map(Number); respond(i, `Watched ${el.dataset.watch}`, "", j, false); } });
+  if (el.dataset.dismiss) return act("/api/dismiss", {handle: el.dataset.dismiss, base: S.accounts.watch_base}, `${el.dataset.dismiss} dismissed`).then(ok => ok && closeDrawer());
+  if (el.dataset.undismiss) return act("/api/undismiss", {handle: el.dataset.undismiss, base: S.accounts.watch_base}, `${el.dataset.undismiss} can be suggested again`);
+  if (el.dataset.unwatch) return act("/api/unwatch", {handle: el.dataset.unwatch, base: S.accounts.watch_base}, `${el.dataset.unwatch} is no longer watched`);
+  if (el.dataset.kwdel !== undefined) { editing.keywords.splice(+el.dataset.kwdel, 1); return drawKeywords(); }
+  if (el.id === "tsave") {
+    takeKeyword();
+    const tag = editing.tag;
+    return act("/api/terms", {tag, x_search: document.getElementById("tq").value, keywords: editing.keywords, base: S.themes.terms_base}, `${tag}: saved`).then(ok => ok && editTheme(tag));
+  }
+  if (el.id === "tcreate") {
+    takeKeyword();
+    const raw = document.getElementById("nt").value.trim(), tag = raw.startsWith("#") ? raw : "#" + raw;
+    return act("/api/theme", {tag, what: document.getElementById("nw").value, different: document.getElementById("nd").value, x_search: document.getElementById("tq").value,
+      keywords: editing.keywords, md_base: S.themes.md_base, terms_base: S.themes.terms_base}, `${tag} added as a theme`).then(ok => { if (ok) { view = "themes"; store.set("view", view); render(); editTheme(tag); } });
+  }
+  if (el.dataset.copy !== undefined) navigator.clipboard?.writeText(el.dataset.copy).then(() => toast("copied: now open their post and paste it"), () => toast("copy failed"));
+});
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.classList.contains("dt-q")) { DT[t.dataset.dt].q = t.value; drawTable(t.dataset.dt); }
+  if (t.id === "tq") document.getElementById("tqn").textContent = `${t.value.length}/${S.themes.x_query_max}`;
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.f !== undefined && t.dataset.dt) { DT[t.dataset.dt].f[t.dataset.f] = t.value; saveTables(); drawTable(t.dataset.dt); }
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeSheet(); return closeDrawer(); }
+  if (view === "story" && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) {
+    if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); return toSlide(slideAt + 1); }
+    if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); return toSlide(slideAt - 1); }
+  }
+  if (e.target.id === "kwin" && (e.key === "Enter" || e.key === ",")) { e.preventDefault(); takeKeyword(); drawKeywords(); document.getElementById("kwin").focus(); }
+  if (e.key === "Enter" && /^note-\d+$/.test(e.target.id || "")) { e.preventDefault(); return document.querySelector(`button[data-send="${e.target.id.slice(5)}"]`)?.click(); }
+  if (e.target.dataset?.add && e.key === "Enter") document.querySelector(`button[data-dt-add="${e.target.dataset.add}"]`)?.click();
+});
+let fitT;  // on resize: refit the type and stay on the same slide; the listeners are already there
+window.addEventListener("resize", () => { if (view !== "story") return; const i = slideAt; clearTimeout(fitT);
+  fitT = setTimeout(() => { fitSlides(); const deck = document.getElementById("deck"); if (deck) { deck.style.scrollBehavior = "auto"; deck.scrollLeft = i * deck.clientWidth; deck.style.scrollBehavior = ""; } slideAt = i; }, 80); });
+load();
+</script>
+</body>
+</html>

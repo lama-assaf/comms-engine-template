@@ -1,0 +1,62 @@
+{
+  "_about": "MCP servers the engine needs to push, drawn from salon's catalog (~/.claude/plugins/cache/atelier/salon/0.1.1/mcp-configs/mcp-servers.json). None is enabled yet. Merge the entry you choose into .mcp.json with /salon:mcp-setup <key>, seed its key as a keychain item (service brand.keychain_service from engine.json, account = the env var name) and add that name to the --export list in scripts/cycle.sh - no token goes in .claude/settings.local.json - and the distributor agent can hand teasers to it. The Apify LinkedIn listening server was moved out of .mcp.json on 2026-11-05 so a plain `claude` needs no environment variable; it is the first entry below, for in-session use only (listen.py --linkedin reaches the same actors over REST through secrets.py).",
+  "listening_already_configured": {},
+  "push_candidates": {
+    "typefully": {
+      "_why": "Drafts and schedules X + LinkedIn from one place; drafts stay reviewable before they go. Fits the manual-release rule best.",
+      "type": "url",
+      "url": "https://mcp.typefully.com/mcp?api_key=${TYPEFULLY_API_KEY}",
+      "_flag": "paid plan; API-key auth only"
+    },
+    "buffer": {
+      "_why": "Official remote MCP, queue-based scheduling for X and LinkedIn company pages.",
+      "type": "url",
+      "url": "https://mcp.buffer.com/mcp",
+      "headers": {
+        "Authorization": "Bearer ${BUFFER_API_KEY}"
+      },
+      "_flag": "plan limits apply"
+    },
+    "postiz": {
+      "_why": "Open-source scheduler with an official remote MCP; self-hostable on the sovereign tooling the deck asks for (Principles s5: Proton workspace).",
+      "type": "url",
+      "url": "https://api.postiz.com/mcp/${POSTIZ_API_KEY}",
+      "_flag": "plan limits apply"
+    },
+    "x-api": {
+      "_why": "Official X MCP via xurl OAuth bridge, for reading replies and mentions on our own handle (reply-playbook, engagement-monitor). Posting needs the pay-per-use Production plan.",
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@xdevplatform/xurl",
+        "mcp"
+      ],
+      "env": {
+        "X_CLIENT_ID": "${X_CLIENT_ID}",
+        "X_CLIENT_SECRET": "${X_CLIENT_SECRET}"
+      },
+      "_flag": "COST: X dev app on the Pay-per-use plan"
+    }
+  },
+  "website": {
+    "_why": "Not an MCP. The site reads the published-posts feed (GET /api/published on the control page, or engine.py export-published); marking an article live there POSTs the site's rebuild webhook with the webhook secret. publish.py --webhook does the same POST when <env_prefix>WEBHOOK_SECRET is set.",
+    "webhook": "engine.json params.site.webhook_url (empty = no webhook)",
+    "reads": "Stream = <brand.name>, Platform = Blog, Status = Published",
+    "post_url": "engine.json params.site.post_url, with {slug} filled per Blog row",
+    "agentic_channel": "a /llms.txt on the site that lists every published insight is the agentic channel family project.md may name"
+  },
+  "avoid": {
+    "linkedin-unofficial": "ToS-flagged scraper with browser login. Salon requires explicit confirmation to add. Do not use for an institutional handle."
+  },
+  "optional_listening": {
+    "apify-social-listening": {
+      "_why": "LinkedIn keyword, company and profile listening through three pinned harvestapi actors, in-session only. Pay-per-result. Add to .mcp.json or .claude/settings.local.json when wanted; export APIFY_TOKEN first (secrets.py --export APIFY_TOKEN).",
+      "type": "url",
+      "url": "https://mcp.apify.com?tools=harvestapi/linkedin-post-search,harvestapi/linkedin-company-posts,harvestapi/linkedin-profile-posts",
+      "headers": {
+        "Authorization": "Bearer ${APIFY_TOKEN}"
+      }
+    }
+  }
+}

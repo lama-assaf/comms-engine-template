@@ -1,0 +1,82 @@
+[
+ {
+  "id": "Q-2026-10-01-exampletheme-1",
+  "theme": "#ExampleTheme",
+  "slug": "a-root-is-not-a-wallet",
+  "title": "A wallet holds a credential. It does not decide which root issued it.",
+  "post": "Europe is building wallets. Every member state owes its citizens one, and the engineering is well under way.\n\nThe question underneath the programme is quieter. A wallet holds credentials; it does not establish which root a company credential chains to.\n\nWhat we do not claim: nothing in this post asserts a deployed Acme capability.",
+  "teaser_linkedin": "A wallet holds a credential. It does not decide which root issued it.\n\nThe wallet programme is engineering. The root is governance, and it is still open.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+  "teaser_x": "A wallet holds a credential. It does not decide which root issued it.\n\nOne is engineering. The other is a governance decision nobody has taken in public yet.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+  "tags": ["#ExampleTheme"],
+  "partner_tags": [],
+  "cta": "https://www.example.com/insights/a-root-is-not-a-wallet",
+  "cites": ["C-acme-4"],
+  "stream": "Acme",
+  "query": "gaps",
+  "hypothesis": "hook form: a two-sentence contrast beats a single declarative",
+  "predicted": "baseline",
+  "test_id": "T-acme-1",
+  "alpha_status": "proposed",
+  "gate": {
+   "verdict": "pass-with-edits",
+   "checks": [
+    {"check": "register", "result": "edit", "line": "The root is governance, and it is still open.", "fix": "LinkedIn teaser: one more sentence of context before the tag line."},
+    {"check": "dates", "result": "pass", "line": "", "fix": ""}
+   ],
+   "note_for_alpha": "Clean on the facts; the LinkedIn teaser reads thin."
+  }
+ },
+ {
+  "id": "Q-2026-10-02-secondtheme-1",
+  "theme": "#SecondTheme",
+  "slug": "a-closed-set-is-the-product",
+  "title": "A closed set answers who may transact by exclusion. Identity answers it by proof.",
+  "post": "A settlement set between vetted parties is a closed set. Membership is the product; the ledger is the plumbing.\n\nWhat we do not claim: the set named here has no members beyond those on its published list.",
+  "teaser_linkedin": "A closed set answers who may transact by exclusion. Identity answers it by proof.\n\nMembership is the product; the ledger is the plumbing.\n\nhttps://www.example.com/insights/a-closed-set-is-the-product",
+  "teaser_x": "A closed set answers who may transact by exclusion. Identity answers it by proof.\n\nMembership is the product.\n\n#SecondTheme\nhttps://www.example.com/insights/a-closed-set-is-the-product",
+  "tags": ["#SecondTheme"],
+  "partner_tags": [],
+  "cta": "https://www.example.com/insights/a-closed-set-is-the-product",
+  "cites": ["C-acme-7"],
+  "stream": "Acme",
+  "query": "depth",
+  "hypothesis": "angle: membership over ledger",
+  "predicted": "above",
+  "test_id": "none",
+  "alpha_status": "proposed",
+  "gate": {
+   "verdict": "pass-with-edits",
+   "checks": [
+    {"check": "lint: tag line", "result": "edit", "line": "https://www.example.com/insights/a-closed-set-is-the-product", "fix": "teaser_linkedin: the tag line does not carry #SecondTheme (a previous run's entry, replaced by the next)."},
+    {"check": "names", "result": "pass", "line": "", "fix": ""}
+   ],
+   "note_for_alpha": "The LinkedIn teaser lost its tag line."
+  }
+ },
+ {
+  "id": "Q-2026-10-03-thirdtheme-1",
+  "theme": "#ThirdTheme",
+  "slug": "answerable-not-merely-auditable",
+  "title": "An answerable record names who acted. An auditable one only shows that someone did.",
+  "post": "Audit trails show that something happened. Accountability asks who is answerable for it, and that is a property of the record's design.\n\nWhat we do not claim: no regulator named here has adopted the distinction in a rule.",
+  "teaser_linkedin": "An answerable record names who acted. An auditable one only shows that someone did.\n\nAccountability is a design property, not an afterthought.\n\n#ThirdTheme\nhttps://www.example.com/insights/answerable-not-merely-auditable",
+  "teaser_x": "An answerable record names who acted. An auditable one only shows that someone did.\n\nAccountability is a design property.\n\n#ThirdTheme\nhttps://www.example.com/insights/answerable-not-merely-auditable",
+  "tags": ["#ThirdTheme"],
+  "partner_tags": [],
+  "cta": "https://www.example.com/insights/answerable-not-merely-auditable",
+  "cites": ["C-acme-1"],
+  "stream": "Acme",
+  "query": "gaps",
+  "hypothesis": "format: definition pair",
+  "predicted": "baseline",
+  "test_id": "none",
+  "alpha_status": "proposed",
+  "gate": {
+   "verdict": "block",
+   "checks": [
+    {"check": "present-tense spec properties", "result": "block", "line": "Accountability asks who is answerable for it, and that is a property of the record's design.", "fix": "The sentence reads as a shipped property; rewrite in design language or cite the evidenced row."}
+   ],
+   "note_for_alpha": "Held on the model's reading; the lint is clean."
+  }
+ }
+]

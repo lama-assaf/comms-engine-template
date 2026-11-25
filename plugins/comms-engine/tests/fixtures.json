@@ -1,0 +1,483 @@
+{
+ "_about": "The gate's fixture set: one clean item of the invented brand Acme and its mutations, each with the check and verdict it must produce. Every name, handle, theme and claim id resolves inside tests/fixtures/memory/, never in .atelier/memory/. The status-word cases ship empty with gate_lint.STATUS_WORDS: a brand adds a blocking case per rule beside its rules (TEMPLATE-CONTRACT.md). Written 2026-11-05.",
+ "base": {
+  "id": "T-fixture-exampletheme-1",
+  "theme": "#ExampleTheme",
+  "slug": "a-root-is-not-a-wallet",
+  "title": "A wallet holds a credential. It does not decide which root issued it.",
+  "post": "Europe is building wallets. Every member state owes its citizens one, and the engineering is well under way.\n\nThe question underneath the programme is quieter. A wallet holds credentials; it does not establish which root a company credential chains to. That is a governance decision, taken once, and it decides whether a credential is portable across borders or merely valid at home.\n\nWe would argue the root is the interesting part. An identifier governed by a public standard, issued under a published qualification regime, checkable by the party relying on it: that is a different object from a national register with an API.\n\nWhat we do not claim: no wallet obligation or standard named here requires the identifier we work with, and nothing in this post asserts a deployed Acme capability.",
+  "teaser_linkedin": "A wallet holds a credential. It does not decide which root issued it.\n\nThe wallet programme is engineering. The root a company credential chains to is governance, and it is still open. That choice decides whether the credential is portable or merely valid at home.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+  "teaser_x": "A wallet holds a credential. It does not decide which root issued it.\n\nOne is engineering. The other is a governance decision nobody has taken in public yet.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+  "tags": [
+   "#ExampleTheme"
+  ],
+  "partner_tags": [],
+  "cta": "https://www.example.com/insights/a-root-is-not-a-wallet",
+  "cites": [
+   "C-acme-4"
+  ],
+  "stream": "Acme",
+  "query": "gaps",
+  "hypothesis": "hook form: a two-sentence contrast beats a single declarative on #ExampleTheme",
+  "predicted": "baseline",
+  "test_id": "T-acme-1"
+ },
+ "cases": [
+  {
+   "name": "an unannounced component named",
+   "source": "handles.private.md denylist: a component the brand has not announced",
+   "insert": "Low-latency relay nodes sit under the mediation layer.",
+   "expect": {
+    "check": "lint: stealth",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "a stealth backer named",
+   "source": "handles.private.md stealth parties: a pitch is not a partner",
+   "insert": "Umbra Capital is among the parties backing the network.",
+   "expect": {
+    "check": "lint: stealth",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "a stealth corridor named",
+   "source": "instincts.md stealth rule: the corridor work is unannounced",
+   "insert": "The Ruritania corridor is the next one we open.",
+   "expect": {
+    "check": "lint: stealth",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "a stealth protocol in a teaser",
+   "source": "instincts.md stealth rule: dark until proven, on every surface that ships",
+   "set": {
+    "teaser_linkedin": "A wallet holds a credential. It does not decide which root issued it.\n\nThe same argument applies to agent payments, where the Umbra protocol is the protocol everyone is reading.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet"
+   },
+   "expect": {
+    "check": "lint: stealth",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "an unproven initiative named as a product",
+   "source": "instincts.md stealth rule: no public mention of an unproven initiative",
+   "insert": "Project Nightjar is the first application of it.",
+   "expect": {
+    "check": "lint: stealth",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "stealth term in the title",
+   "source": "instincts.md: stealth is stealth until proven; when in doubt, cut the line",
+   "set": {
+    "title": "The Umbra route is not the one identity should take."
+   },
+   "expect": {
+    "check": "lint: stealth",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "partner tag not on the cleared list",
+   "source": "instincts.md: cleared names are a short, closed list; a pitch is not a partner",
+   "set": {
+    "partner_tags": [
+     "@notcleared"
+    ]
+   },
+   "expect": {
+    "check": "lint: partner tags",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "partner tag on a cleared but unverified row",
+   "source": "handles.md: a handle is tagged only if its owner is cleared and its row is verified",
+   "set": {
+    "partner_tags": [
+     "@gammabank"
+    ]
+   },
+   "expect": {
+    "check": "lint: partner tags",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "no what-we-do-not-claim sentence",
+   "source": "theme-post step 4: the post says what we do not claim; that panel is what makes the rest credible",
+   "set": {
+    "post": "Europe is building wallets. Every member state owes its citizens one.\n\nThe question underneath the programme is which root a company credential chains to, and that choice is still open."
+   },
+   "expect": {
+    "check": "lint: what we do not claim",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "a second theme hashtag in the tag line",
+   "source": "theme-post: one pillar per output; the licence is graded per theme",
+   "set": {
+    "teaser_linkedin": "A wallet holds a credential. It does not decide which root issued it.\n\nThe root a company credential chains to is a governance decision, and it is still open.\n\n#ExampleTheme #ThirdTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet"
+   },
+   "expect": {
+    "check": "lint: tag line",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "teaser with no theme hashtag",
+   "source": "Principles s3 step 2: insight posts claim a theme hashtag and link back to the fact",
+   "set": {
+    "teaser_x": "A wallet holds a credential. It does not decide which root issued it.\n\nOne is engineering. The other is governance.\n\nhttps://www.example.com/insights/a-root-is-not-a-wallet"
+   },
+   "expect": {
+    "check": "lint: tag line",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "no CTA",
+   "source": "Principles s2: website first; the teasers link back to the post on the brand's site",
+   "set": {
+    "cta": ""
+   },
+   "expect": {
+    "check": "lint: cta",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "CTA that does not match the slug",
+   "source": "repo.py: the slug the CTA points at, so the two cannot disagree",
+   "set": {
+    "cta": "https://www.example.com/insights/some-other-post"
+   },
+   "expect": {
+    "check": "lint: cta",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "teaser missing the CTA",
+   "source": "theme-post step 5: tag line, then the CTA link",
+   "set": {
+    "teaser_x": "A wallet holds a credential. It does not decide which root issued it.\n\nOne is engineering. The other is a governance decision nobody has taken in public yet.\n\n#ExampleTheme"
+   },
+   "expect": {
+    "check": "lint: cta",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "hook of 18 words",
+   "source": "voice.md: hooks of 6 to 17 words",
+   "set": {
+    "title": "A credential that carries an entity's own authority structure is worth more than a key that carries none."
+   },
+   "expect": {
+    "check": "lint: hook",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "hook of 4 words",
+   "source": "voice.md: hooks of 6 to 17 words",
+   "set": {
+    "title": "The root is governance."
+   },
+   "expect": {
+    "check": "lint: hook",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "hashtag inside the hook",
+   "source": "theme-post: no hashtag, emoji or colon-as-hook in the hook line; tags live in the tag line",
+   "set": {
+    "title": "#ExampleTheme is a question about the root, not about the wallet."
+   },
+   "expect": {
+    "check": "lint: hook",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "emoji in the hook",
+   "source": "voice.md: the editorial register carries no emoji",
+   "set": {
+    "teaser_linkedin": "🚀 A wallet holds a credential. It does not decide which root issued it.\n\nThe root a company credential chains to is a governance decision, and it is still open.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet"
+   },
+   "expect": {
+    "check": "lint: hook",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "question as the X hook (cleared since 2026-11-07)",
+   "source": "decision 2026-11-07-vary-the-template: the hook may take any form, a question included",
+   "set": {
+    "teaser_x": "Which root does a company credential chain to?\n\nOne is engineering. The other is a governance decision nobody has taken in public yet.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet"
+   },
+   "expect": {
+    "check": "lint: hook",
+    "result": "pass",
+    "verdict": "pass"
+   }
+  },
+  {
+   "name": "cleared form - plans to provide",
+   "source": "instincts.md: use the hedges already cleared; design language is masked before the capability scan",
+   "insert": "Acme plans to provide the identity layer those wallets could anchor to.",
+   "expect": {
+    "check": "lint: status words",
+    "result": "pass",
+    "verdict": "pass"
+   }
+  },
+  {
+   "name": "cleared form - intend to jointly develop the foundations for",
+   "source": "instincts.md: published, defensible forms",
+   "insert": "We intend to jointly develop the foundations for a settlement corridor between three financial centres.",
+   "expect": {
+    "check": "lint: status words",
+    "result": "pass",
+    "verdict": "pass"
+   }
+  },
+  {
+   "name": "cleared handle, but not on this theme",
+   "source": "handles.md how to read a row: the themes cell governs the tag together with the status; Beta Labs is cleared on #SecondTheme, not #ExampleTheme",
+   "set": {
+    "partner_tags": [
+     "@betalabs"
+    ]
+   },
+   "expect": {
+    "check": "lint: partner tags",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "cleared partner tag on a verified row, on a theme it is cleared for",
+   "source": "handles.md: Beta Labs, verified, cleared on #SecondTheme; the tag follows the scope on record",
+   "set": {
+    "theme": "#SecondTheme",
+    "partner_tags": [
+     "@betalabs"
+    ],
+    "teaser_linkedin": "A wallet holds a credential. It does not decide which root issued it.\n\nThe wallet programme is engineering. The root a company credential chains to is governance, and it is still open. That choice decides whether the credential is portable or merely valid at home.\n\n#SecondTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+    "teaser_x": "A wallet holds a credential. It does not decide which root issued it.\n\nOne is engineering. The other is a governance decision nobody has taken in public yet.\n\n#SecondTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet"
+   },
+   "expect": {
+    "check": "lint: partner tags",
+    "result": "pass",
+    "verdict": "pass"
+   }
+  },
+  {
+   "name": "the clean base item",
+   "source": "the shape theme-post writes: hook, tag line, CTA, and the honest sentence",
+   "expect": {
+    "check": "lint: hook",
+    "result": "pass",
+    "verdict": "pass"
+   }
+  },
+  {
+   "name": "cite of a superseded claim",
+   "source": "claims.md: C-acme-6 superseded_by C-acme-7 (A5)",
+   "set": {
+    "cites": [
+     "C-acme-6"
+    ]
+   },
+   "expect": {
+    "check": "lint: cites",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "cite of an unknown claim id",
+   "source": "claims.md (A5)",
+   "set": {
+    "cites": [
+     "C-acme-999"
+    ]
+   },
+   "expect": {
+    "check": "lint: cites",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "cite of a watching row",
+   "source": "claims.md: C-acme-8 corroboration watching (A5)",
+   "set": {
+    "cites": [
+     "C-acme-4",
+     "C-acme-8"
+    ]
+   },
+   "expect": {
+    "check": "lint: cites",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "no cites at all",
+   "source": "A5: every draft names the rows it leans on",
+   "set": {
+    "cites": []
+   },
+   "expect": {
+    "check": "lint: cites",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "present-tense capability with only an intended cite",
+   "source": "A5: a capability sentence needs an evidenced cite; C-acme-9 is intended",
+   "set": {
+    "cites": [
+     "C-acme-9"
+    ]
+   },
+   "insert": "Acme issues organisational credentials to any company that asks.",
+   "expect": {
+    "check": "lint: cites",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "present-tense capability with an evidenced cite",
+   "source": "A5: C-acme-5 is evidenced",
+   "set": {
+    "cites": [
+     "C-acme-5"
+    ]
+   },
+   "insert": "Acme operates a demonstrable issuance platform, shown to auditors on request.",
+   "expect": {
+    "check": "lint: cites",
+    "result": "pass",
+    "verdict": "pass"
+   }
+  },
+  {
+   "name": "negated or design-language capability needs no evidenced cite",
+   "source": "A5: 'we do not settle' and 'plans to provide' are masked",
+   "set": {
+    "cites": [
+     "C-acme-9"
+    ]
+   },
+   "insert": "We do not settle, and Acme plans to provide the layer those rails can anchor to.",
+   "expect": {
+    "check": "lint: cites",
+    "result": "pass",
+    "verdict": "pass"
+   }
+  },
+  {
+   "name": "no stream on the item",
+   "source": "A3/A7: every record names its stream; the gate reads that stream's memory",
+   "set": {
+    "stream": ""
+   },
+   "expect": {
+    "check": "lint: stream",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "stream Both",
+   "source": "A7: the single-pillar test; split before drafting further",
+   "set": {
+    "stream": "Both"
+   },
+   "expect": {
+    "check": "lint: stream",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "an Acme item gated against the beta memory",
+   "source": "A7 acceptance: its theme is not a beta theme and beta's private companion is absent",
+   "set": {
+    "stream": "Beta"
+   },
+   "expect": {
+    "check": "lint: stream",
+    "result": "block",
+    "verdict": "block"
+   }
+  },
+  {
+   "name": "no hypothesis on the draft",
+   "source": "A8: every draft carries a one-variable hypothesis",
+   "set": {
+    "hypothesis": ""
+   },
+   "expect": {
+    "check": "lint: hypothesis",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "predicted band outside the vocabulary",
+   "source": "A8: predicted is below, baseline or above",
+   "set": {
+    "predicted": "viral"
+   },
+   "expect": {
+    "check": "lint: hypothesis",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  },
+  {
+   "name": "no planning query named",
+   "source": "A8: the pick names which query it answers",
+   "set": {
+    "query": ""
+   },
+   "expect": {
+    "check": "lint: hypothesis",
+    "result": "edit",
+    "verdict": "pass-with-edits"
+   }
+  }
+ ]
+}

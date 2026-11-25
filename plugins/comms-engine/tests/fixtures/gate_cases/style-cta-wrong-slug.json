@@ -1,0 +1,29 @@
+{
+ "_about": "One labelled draft for scripts/gate_eval.py. `expect` is what the gate must do with it: block (the claim checks stop it), flag (a reviewer names the house-style fault; it is advice and never blocks) or pass. `rule` is the check it tests: claims, or one of the house-style rules a person may retire from the code (hook, tag line, cta, shape) once the reviewers catch every case of it. Every name, claim id and theme is the fixture brand's (tests/fixtures/memory).",
+ "id": "style-cta-wrong-slug",
+ "rule": "cta",
+ "expect": "flag",
+ "why": "The link does not match the item's slug.",
+ "item": {
+  "id": "G-style-cta-wrong-slug",
+  "theme": "#ExampleTheme",
+  "slug": "a-root-is-not-a-wallet",
+  "title": "A wallet holds a credential. It does not decide which root issued it.",
+  "post": "Europe is building wallets. Every member state owes its citizens one, and the engineering is well under way.\n\nThe question underneath the programme is quieter. A wallet holds credentials; it does not establish which root a company credential chains to. That is a governance decision, taken once, and it decides whether a credential is portable across borders or merely valid at home.\n\nWe would argue the root is the interesting part. An identifier governed by a public standard, issued under a published qualification regime, checkable by the party relying on it: that is a different object from a national register with an API.\n\nWhat we do not claim: no wallet obligation or standard named here requires the identifier we work with, and nothing in this post asserts a deployed Acme capability.",
+  "teaser_linkedin": "A wallet holds a credential. It does not decide which root issued it.\n\nThe wallet programme is engineering. The root a company credential chains to is governance, and it is still open. That choice decides whether the credential is portable or merely valid at home.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+  "teaser_x": "A wallet holds a credential. It does not decide which root issued it.\n\nOne is engineering. The other is a governance decision nobody has taken in public yet.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+  "tags": [
+   "#ExampleTheme"
+  ],
+  "partner_tags": [],
+  "cta": "https://www.example.com/insights/some-other-post",
+  "cites": [
+   "C-acme-4"
+  ],
+  "stream": "Acme",
+  "query": "gaps",
+  "hypothesis": "hook form: a two-sentence contrast beats a single declarative on #ExampleTheme",
+  "predicted": "baseline",
+  "test_id": "T-acme-1"
+ }
+}

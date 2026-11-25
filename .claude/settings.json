@@ -1,0 +1,31 @@
+{
+  "_about": "Project settings, tracked. A fresh clone gets the plugin enablement, the plugin deny list and the MCP approval with plain `claude`. The engine itself is the comms-engine plugin (plugins/comms-engine, listed by this repository's .claude-plugin/marketplace.json): its agents, skills, commands and hooks load from there. On a development machine the marketplace is this directory, registered once in the gitignored settings.local.json with `claude plugin marketplace add ./ --scope local`, then `claude plugin install comms-engine@comms-engine --scope local`; an instance made by `engine new-instance` names the GitHub marketplace instead. atelier, salon and motion need one `claude plugin install <name>@atelier --scope project` per machine: enabling here does not download them.",
+  "enabledPlugins": {
+    "comms-engine@comms-engine": true,
+    "atelier@atelier": true,
+    "salon@atelier": true,
+    "motion@atelier": true
+  },
+  "_permissions_about": "What the plugins bring that this repository must not use. salon's theme-desk and theme-listener agents and its claim-gate, theme-post, theme-listening, social-listening, linkedin-post, publisher-gates, website-publish and engine-dashboard skills share a job or a name with the engine's own (the comms-engine plugin's agents and skills, scripts/control.py), which are the ones tied to the claims register and the engine's scripts: a generic look-alike picked by name would be a gate that checks nothing, or a publisher that asks no gate. salon's telegram-broadcast and discord-announcement send to channels channels.send() has no sender for. motion:post publishes to Instagram, a channel channels.send() does not know. motion:generate makes paid calls and is not in this list: the PreToolUse hook on the Skill tool (the comms-engine plugin's hooks/guard_skills.py) refuses it unless a person recorded a dated cost sign-off (params.motion.generate_signoff; scripts/motion.py generate-signoff says where it stands), and refuses it too when the sign-off cannot be read. Every role the engine does call is in engine.json params.plugins.roles, and scripts/roles.py refuses a role that names anything denied here.",
+  "permissions": {
+    "deny": [
+      "Agent(salon:theme-desk)",
+      "Agent(salon:theme-listener)",
+      "Skill(salon:claim-gate)",
+      "Skill(salon:theme-post)",
+      "Skill(salon:theme-listening)",
+      "Skill(salon:linkedin-post)",
+      "Skill(salon:social-listening)",
+      "Skill(salon:publisher-gates)",
+      "Skill(salon:website-publish)",
+      "Skill(salon:engine-dashboard)",
+      "Skill(salon:telegram-broadcast)",
+      "Skill(salon:discord-announcement)",
+      "Skill(motion:post)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "worktree": {
+    "bgIsolation": "none"
+  }
+}

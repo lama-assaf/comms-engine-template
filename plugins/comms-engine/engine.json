@@ -1,0 +1,2665 @@
+{
+  "_about": "The engine's shipped defaults in one file, which nobody edits: the placeholder brand (`brand`), every scheduled job (`jobs`), the parameters each job's script reads (`params`, through scripts/config.py: cfg('cycle.budget_usd')), the workflows and chains the runner runs (`params.workflows`, `params.chains`) and per-stream defaults (`streams`). Tracked, so nothing here names a machine (__REPO__ and __HOME__ stand for this checkout and the home directory). A project's own setup is brand.json at the repository root, merged over this file; engine.local.json beside this file, gitignored, overrides `brand`, `params` and `streams` per machine; an environment variable <ENV_PREFIX><SECTION>_<KEY> (ACME_CYCLE_BUDGET_USD for the shipped brand) outranks both. Never a secret: `params.secrets` holds names only, the values live in the keychain (scripts/secrets.py). Change a schedule here, then run schedule/install.sh again.",
+  "_brand_about": "The placeholder brand, as shipped. A project names its brand in brand.json at the repository root (`engine.py init` writes it; scripts/config.py merges it over this file) and never edits this block. What the block derives: `slug` is the root stream (the first row of .atelier/memory/streams.md and memory.py's default), `name` the display name notes and records carry, `label_prefix` the launchd label every job name is appended to (<label_prefix>.<job name>), `env_prefix` the prefix of every environment override and marker (<env_prefix>CYCLE_BUDGET_USD, <env_prefix>REPO), `keychain_service` the macOS keychain service the secrets are stored under. `acme` / `Acme` is the placeholder a fresh clone carries until init writes brand.json.",
+  "brand": {
+    "slug": "acme",
+    "name": "Acme",
+    "label_prefix": "com.acme",
+    "env_prefix": "ACME_",
+    "keychain_service": "acme-comms"
+  },
+  "_jobs_about": "Every scheduled job of the engine, in one place. A job has a `name`; its launchd label is <brand.label_prefix>.<name>, derived by scripts/config.py and never written here. install.sh renders each entry into a launchd plist under ~/Library/LaunchAgents/ with __REPO__ replaced by the instance's path and __ENGINE__ by the engine's root, so nothing here names a machine; a job's `log` is relative to the instance. Times are the Mac's local time. `env` is added to every job's EnvironmentVariables; CLAUDE_CONFIG_DIR is added when the installing shell has it set. Change a schedule here, then run install.sh again. A script under ~/Desktop or ~/Documents cannot be exec'd by launchd directly (Operation not permitted); every script job names its interpreter first (/bin/zsh cycle.sh, /bin/zsh corpus_cycle_daily.sh), and the job's stdout goes to ~/Library/Logs/<brand.slug>-comms/.",
+  "path": "/opt/homebrew/bin:/usr/local/bin:__HOME__/.local/bin:/usr/bin:/bin",
+  "jobs": [
+    {
+      "name": "corpus-cycle",
+      "what": "corpus memory: sweep the strategy corpus (params.corpus.root); only when something changed, a headless /corpus-cycle --apply --max 8",
+      "program": [
+        "/bin/zsh",
+        "__ENGINE__/skills/deck-reader/scripts/corpus_cycle_daily.sh"
+      ],
+      "calendar": [
+        {
+          "Weekday": 1,
+          "Hour": 6,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 6,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 6,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 6,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 6,
+          "Minute": 30
+        }
+      ],
+      "log": "state/corpus-cycle.log"
+    },
+    {
+      "name": "social-engine",
+      "what": "the cycle: the weekday chain of workflows through cycle.sh and workflow.py; the editor on Monday, the slots on Friday, the readout on the first weekday of the month",
+      "program": [
+        "/bin/zsh",
+        "__ENGINE__/scripts/cycle.sh"
+      ],
+      "calendar": [
+        {
+          "Weekday": 1,
+          "Hour": 7,
+          "Minute": 15
+        },
+        {
+          "Weekday": 2,
+          "Hour": 7,
+          "Minute": 15
+        },
+        {
+          "Weekday": 3,
+          "Hour": 7,
+          "Minute": 15
+        },
+        {
+          "Weekday": 4,
+          "Hour": 7,
+          "Minute": 15
+        },
+        {
+          "Weekday": 5,
+          "Hour": 7,
+          "Minute": 15
+        }
+      ],
+      "log": "state/schedule.log"
+    },
+    {
+      "name": "autopilot",
+      "what": "the sender: calendar snapshot into state/ and .atelier/memory/calendar.md, then post the Ready LinkedIn and X rows due today within streams.md's guardrails, then link replies",
+      "program": [
+        "/usr/bin/env",
+        "python3",
+        "__ENGINE__/scripts/autopilot.py",
+        "run"
+      ],
+      "calendar": [
+        {
+          "Weekday": 1,
+          "Hour": 9,
+          "Minute": 5
+        },
+        {
+          "Weekday": 2,
+          "Hour": 9,
+          "Minute": 5
+        },
+        {
+          "Weekday": 3,
+          "Hour": 9,
+          "Minute": 5
+        },
+        {
+          "Weekday": 4,
+          "Hour": 9,
+          "Minute": 5
+        },
+        {
+          "Weekday": 5,
+          "Hour": 9,
+          "Minute": 5
+        },
+        {
+          "Weekday": 1,
+          "Hour": 13,
+          "Minute": 35
+        },
+        {
+          "Weekday": 2,
+          "Hour": 13,
+          "Minute": 35
+        },
+        {
+          "Weekday": 3,
+          "Hour": 13,
+          "Minute": 35
+        },
+        {
+          "Weekday": 4,
+          "Hour": 13,
+          "Minute": 35
+        },
+        {
+          "Weekday": 5,
+          "Hour": 13,
+          "Minute": 35
+        }
+      ],
+      "log": "state/autopilot.launchd.log"
+    },
+    {
+      "name": "engagement",
+      "what": "the engagement chain: reply and comment drafts, community drafts, then the reactions due inside their caps",
+      "program": [
+        "/bin/zsh",
+        "__ENGINE__/scripts/cycle.sh",
+        "--only",
+        "engage"
+      ],
+      "calendar": [
+        {
+          "Weekday": 1,
+          "Hour": 15,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 15,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 15,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 15,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 15,
+          "Minute": 30
+        }
+      ],
+      "log": "state/schedule.log"
+    },
+    {
+      "name": "score",
+      "what": "public counts for our own X posts, scoring at 72 h and 7 d, the scorecard rows, live tests closed",
+      "program": [
+        "/bin/zsh",
+        "-lc",
+        "cd __REPO__ && echo \"=== score $(date -u +%FT%TZ) ===\" && { python3 __ENGINE__/scripts/x_metrics.py || echo \"x_metrics failed; scoring on listening alone\"; } && python3 __ENGINE__/scripts/score.py --demand && python3 __ENGINE__/scripts/metrics.py && python3 __ENGINE__/scripts/livetests.py close"
+      ],
+      "calendar": [
+        {
+          "Hour": 22,
+          "Minute": 0
+        }
+      ],
+      "log": "state/schedule.log"
+    },
+    {
+      "name": "claims-check",
+      "what": "supersession and decay check, the state check, the dashboard rebuild",
+      "program": [
+        "/bin/zsh",
+        "-lc",
+        "cd __REPO__ && echo \"=== claims-check $(date -u +%FT%TZ) ===\" && python3 __ENGINE__/scripts/claims_check.py && python3 __ENGINE__/scripts/state_check.py && python3 __ENGINE__/scripts/build_dashboard.py"
+      ],
+      "calendar": [
+        {
+          "Hour": 22,
+          "Minute": 15
+        }
+      ],
+      "log": "state/schedule.log"
+    },
+    {
+      "name": "x-stream",
+      "what": "the twitterapi.io WebSocket on the <slug>:* rules, always on; start it before `x_stream.py rules --apply`, an active rule is billed per match",
+      "program": [
+        "/bin/zsh",
+        "-lc",
+        "cd __REPO__ && mkdir -p state/x-stream && secret_exports=\"$(python3 __ENGINE__/scripts/secrets.py --export TWITTERAPI_IO_API_KEY)\" && eval \"$secret_exports\" && unset secret_exports && exec python3 -u __ENGINE__/scripts/x_stream.py listen"
+      ],
+      "keep_alive": true,
+      "throttle": 90,
+      "log": "state/x-stream/listener.log",
+      "optional": true
+    },
+    {
+      "name": "x-poll",
+      "what": "the standing X monitors as a scheduled search: `x_stream.py poll` runs the planned <slug>:* rules through channels.search with a persisted since_id every 30 minutes, 08:00-18:30 on weekdays, and appends to the same state/x-stream/<date>.jsonl the WebSocket writes. Optional and not loaded by default (reads are billed per result): the owner enables it with `engine.py enable x-poll`; `x_stream.py poll --dry-run` plans the queries and calls nothing",
+      "program": [
+        "/bin/zsh",
+        "-lc",
+        "cd __REPO__ && mkdir -p state/x-stream && exec python3 -u __ENGINE__/scripts/x_stream.py poll"
+      ],
+      "calendar": [
+        {
+          "Weekday": 1,
+          "Hour": 8,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 8,
+          "Minute": 30
+        },
+        {
+          "Weekday": 1,
+          "Hour": 9,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 9,
+          "Minute": 30
+        },
+        {
+          "Weekday": 1,
+          "Hour": 10,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 10,
+          "Minute": 30
+        },
+        {
+          "Weekday": 1,
+          "Hour": 11,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 11,
+          "Minute": 30
+        },
+        {
+          "Weekday": 1,
+          "Hour": 12,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 12,
+          "Minute": 30
+        },
+        {
+          "Weekday": 1,
+          "Hour": 13,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 13,
+          "Minute": 30
+        },
+        {
+          "Weekday": 1,
+          "Hour": 14,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 14,
+          "Minute": 30
+        },
+        {
+          "Weekday": 1,
+          "Hour": 15,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 15,
+          "Minute": 30
+        },
+        {
+          "Weekday": 1,
+          "Hour": 16,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 16,
+          "Minute": 30
+        },
+        {
+          "Weekday": 1,
+          "Hour": 17,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 17,
+          "Minute": 30
+        },
+        {
+          "Weekday": 1,
+          "Hour": 18,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 18,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 8,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 8,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 9,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 9,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 10,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 10,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 11,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 11,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 12,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 12,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 13,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 13,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 14,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 14,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 15,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 15,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 16,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 16,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 17,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 17,
+          "Minute": 30
+        },
+        {
+          "Weekday": 2,
+          "Hour": 18,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 18,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 8,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 8,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 9,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 9,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 10,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 10,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 11,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 11,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 12,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 12,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 13,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 13,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 14,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 14,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 15,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 15,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 16,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 16,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 17,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 17,
+          "Minute": 30
+        },
+        {
+          "Weekday": 3,
+          "Hour": 18,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 18,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 8,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 8,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 9,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 9,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 10,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 10,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 11,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 11,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 12,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 12,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 13,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 13,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 14,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 14,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 15,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 15,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 16,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 16,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 17,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 17,
+          "Minute": 30
+        },
+        {
+          "Weekday": 4,
+          "Hour": 18,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 18,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 8,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 8,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 9,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 9,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 10,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 10,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 11,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 11,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 12,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 12,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 13,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 13,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 14,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 14,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 15,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 15,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 16,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 16,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 17,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 17,
+          "Minute": 30
+        },
+        {
+          "Weekday": 5,
+          "Hour": 18,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 18,
+          "Minute": 30
+        }
+      ],
+      "log": "state/x-stream/poll.log",
+      "optional": true
+    },
+    {
+      "name": "inbound",
+      "what": "mentions, replies and comments on our own accounts as patterns only: `inbound.py poll` runs channels.inbound for X (the <slug>:mentions query and replies in our recent posts' conversations, through TWITTER_RECENT_SEARCH with a persisted since_id) and LinkedIn (comments on our recent posts, a `composio proxy` GET), keeps a cursor per channel in state/inbound.json and merges counts into state/engagement.json inbound, no handle stored. Every 20 minutes, 08:00-18:40 on weekdays. Optional and not loaded by default: the X half stays off until the owner's own-reads price sign-off (params.listen.x_own_price_signoff) is recorded and channels.x_own.<slug> is composio, the LinkedIn half runs only with a linked LinkedIn composio account; the owner enables it with `engine.py enable inbound`; `inbound.py poll --dry-run` plans the queries and calls nothing",
+      "program": [
+        "/bin/zsh",
+        "-lc",
+        "cd __REPO__ && exec python3 -u __ENGINE__/scripts/inbound.py poll"
+      ],
+      "calendar": [
+        {
+          "Weekday": 1,
+          "Hour": 8,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 8,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 8,
+          "Minute": 40
+        },
+        {
+          "Weekday": 1,
+          "Hour": 9,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 9,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 9,
+          "Minute": 40
+        },
+        {
+          "Weekday": 1,
+          "Hour": 10,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 10,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 10,
+          "Minute": 40
+        },
+        {
+          "Weekday": 1,
+          "Hour": 11,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 11,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 11,
+          "Minute": 40
+        },
+        {
+          "Weekday": 1,
+          "Hour": 12,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 12,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 12,
+          "Minute": 40
+        },
+        {
+          "Weekday": 1,
+          "Hour": 13,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 13,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 13,
+          "Minute": 40
+        },
+        {
+          "Weekday": 1,
+          "Hour": 14,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 14,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 14,
+          "Minute": 40
+        },
+        {
+          "Weekday": 1,
+          "Hour": 15,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 15,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 15,
+          "Minute": 40
+        },
+        {
+          "Weekday": 1,
+          "Hour": 16,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 16,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 16,
+          "Minute": 40
+        },
+        {
+          "Weekday": 1,
+          "Hour": 17,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 17,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 17,
+          "Minute": 40
+        },
+        {
+          "Weekday": 1,
+          "Hour": 18,
+          "Minute": 0
+        },
+        {
+          "Weekday": 1,
+          "Hour": 18,
+          "Minute": 20
+        },
+        {
+          "Weekday": 1,
+          "Hour": 18,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 8,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 8,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 8,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 9,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 9,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 9,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 10,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 10,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 10,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 11,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 11,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 11,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 12,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 12,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 12,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 13,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 13,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 13,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 14,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 14,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 14,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 15,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 15,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 15,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 16,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 16,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 16,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 17,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 17,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 17,
+          "Minute": 40
+        },
+        {
+          "Weekday": 2,
+          "Hour": 18,
+          "Minute": 0
+        },
+        {
+          "Weekday": 2,
+          "Hour": 18,
+          "Minute": 20
+        },
+        {
+          "Weekday": 2,
+          "Hour": 18,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 8,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 8,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 8,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 9,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 9,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 9,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 10,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 10,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 10,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 11,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 11,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 11,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 12,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 12,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 12,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 13,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 13,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 13,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 14,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 14,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 14,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 15,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 15,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 15,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 16,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 16,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 16,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 17,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 17,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 17,
+          "Minute": 40
+        },
+        {
+          "Weekday": 3,
+          "Hour": 18,
+          "Minute": 0
+        },
+        {
+          "Weekday": 3,
+          "Hour": 18,
+          "Minute": 20
+        },
+        {
+          "Weekday": 3,
+          "Hour": 18,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 8,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 8,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 8,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 9,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 9,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 9,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 10,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 10,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 10,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 11,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 11,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 11,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 12,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 12,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 12,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 13,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 13,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 13,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 14,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 14,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 14,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 15,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 15,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 15,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 16,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 16,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 16,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 17,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 17,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 17,
+          "Minute": 40
+        },
+        {
+          "Weekday": 4,
+          "Hour": 18,
+          "Minute": 0
+        },
+        {
+          "Weekday": 4,
+          "Hour": 18,
+          "Minute": 20
+        },
+        {
+          "Weekday": 4,
+          "Hour": 18,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 8,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 8,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 8,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 9,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 9,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 9,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 10,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 10,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 10,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 11,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 11,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 11,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 12,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 12,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 12,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 13,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 13,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 13,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 14,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 14,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 14,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 15,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 15,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 15,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 16,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 16,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 16,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 17,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 17,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 17,
+          "Minute": 40
+        },
+        {
+          "Weekday": 5,
+          "Hour": 18,
+          "Minute": 0
+        },
+        {
+          "Weekday": 5,
+          "Hour": 18,
+          "Minute": 20
+        },
+        {
+          "Weekday": 5,
+          "Hour": 18,
+          "Minute": 40
+        }
+      ],
+      "log": "state/inbound.log",
+      "optional": true
+    },
+    {
+      "name": "control",
+      "what": "the control page kept up on a hosted Mac (docs/07-hosting.md): `control.py serve` on 127.0.0.1, which `tailscale serve --bg 4320` puts on the tailnet. Optional and off by default: a person's own Mac starts the page with /control when it is wanted",
+      "program": [
+        "/bin/zsh",
+        "-lc",
+        "cd __REPO__ && exec python3 -u __ENGINE__/scripts/control.py serve --no-open"
+      ],
+      "keep_alive": true,
+      "throttle": 30,
+      "log": "state/control.log",
+      "optional": true
+    },
+    {
+      "name": "backup",
+      "what": "the record into git, and off the Mac when params.backup.push is true: `backup.py` commits Content/, .atelier/memory/, brand.json, themes.json and the tracked state/ files, then pulls with rebase and pushes; a conflict stops it, nothing is forced. Optional and off by default: a hosted instance turns it on (docs/07-hosting.md)",
+      "program": [
+        "/bin/zsh",
+        "-lc",
+        "cd __REPO__ && echo \"=== backup $(date -u +%FT%TZ) ===\" && exec python3 -u __ENGINE__/scripts/backup.py"
+      ],
+      "calendar": [
+        {
+          "Hour": 23,
+          "Minute": 40
+        }
+      ],
+      "log": "state/backup.log",
+      "optional": true
+    },
+    {
+      "name": "nosleep",
+      "what": "caffeinate: the Mac stays awake for the schedules",
+      "program": [
+        "/usr/bin/caffeinate",
+        "-is"
+      ],
+      "keep_alive": true,
+      "log": null
+    }
+  ],
+  "params": {
+    "corpus": {
+      "job": "corpus-cycle",
+      "root": "__HOME__/Documents/Strategy",
+      "include": [],
+      "exclude": [],
+      "extra_roots": [],
+      "max": 8,
+      "apply": true,
+      "budget_usd": 10,
+      "_root_about": "a placeholder: `engine.py setup corpus --root <path>` writes the real one into engine.local.json"
+    },
+    "cycle": {
+      "job": "social-engine",
+      "drafts": 3,
+      "budget_usd": 20,
+      "listen": true,
+      "max_per_term": 12,
+      "linkedin": false,
+      "motion": true,
+      "motion_per_cycle": 3,
+      "voice_pass": true,
+      "_voice_pass_about": "step 4b of /social-cycle: the atelier brand-voice-keeper agent reads the new drafts against voice.md before the gate; false makes cycle.sh pass --no-voice (one agent run less per cycle)",
+      "weekday_flags": {
+        "editor": true,
+        "slots": true,
+        "readout": true
+      }
+    },
+    "autopilot": {
+      "job": "autopilot",
+      "grace_days": 2,
+      "timezone": "UTC",
+      "_timezone_about": "the IANA zone quiet hours, caps and the 09:00 slot are judged in (guardrails.py); UTC until `config.py set autopilot.timezone <zone>` writes the brand's into engine.local.json (not a `setup autopilot` question yet: the /engine command's setup table lists the questions and is owned with the prose)",
+      "commit": false
+    },
+    "channels": {
+      "_composio_org_about": "A label for the Composio project each stream's COMPOSIO_API_KEY belongs to, by stream slug (it also marks the stream as set up for Composio while its key is missing). It is not checked: the check is auth_config below. The owner records the name; never guess it.",
+      "composio_org": {
+        "acme": ""
+      },
+      "_reactions_signoff_about": "The owner's dated sign-off for automatic likes on X, by stream slug: empty, a like on X goes out on a person's click only, whatever the like mode says. X's developer guidelines require a like to be directly initiated by the account's user (decisions/2026-11-13-reactions-platform-rules.md, read 2026-11-13), so this ships empty and that decision recommends it stays empty. Reposts and quote posts do not read it.",
+      "reactions_signoff": {
+        "acme": ""
+      },
+      "_auth_config_about": "The Composio auth config id each stream's channel connects under, by stream slug then channel (x, linkedin). doctor lists the auth configs the stream's key can see (GET /api/v3.1/auth_configs) and FAILS when a recorded id is not among them: the key then belongs to another project. While none is recorded the line is green and says so.",
+      "auth_config": {
+        "acme": {
+          "x": "",
+          "linkedin": ""
+        }
+      },
+      "_account_id_about": "The connected-account id of a stream's channel, by stream slug then channel, for when the Composio dashboard offers no account alias. channels.py looks for the alias <stream>-<channel> first and uses this id only when no account carries it. The id must be in the stream's own project; another project's id is refused.",
+      "account_id": {
+        "acme": {
+          "x": "",
+          "linkedin": ""
+        }
+      }
+    },
+    "listen": {
+      "_about": "X reads, in two classes with a price sign-off each. Listening and the standing monitors (search, counts, x_stream poll) take the driver channels.x_read.<stream> and the sign-off x_price_signoff. Our own accounts (own-post numbers through x_metrics.py, mentions and replies through inbound.py) take the driver channels.x_own.<stream> and the sign-off x_own_price_signoff. Both drivers are twitterapi or composio and default to twitterapi. A sign-off is the owner's acceptance of the official X API's price: empty means not recorded, and that class stays on twitterapi.io whatever its driver says; one class's sign-off never releases the other. Set it to a dated owner note, in the owner's words and scoped to what was accepted, only when the owner has said so. query_limit is the longest query the @watched packing builds, per driver; composio_call_cap bounds the Composio calls one process makes before it falls back to twitterapi.io.",
+      "x_price_signoff": "",
+      "x_own_price_signoff": "",
+      "query_limit": {
+        "twitterapi": 255,
+        "composio": 512
+      },
+      "composio_call_cap": 200
+    },
+    "engagement": {
+      "job": "engagement",
+      "window_days": 3,
+      "dry_run": true
+    },
+    "score": {
+      "job": "score",
+      "on": true,
+      "x_metrics": true,
+      "demand": true,
+      "close_livetests": true
+    },
+    "claims_check": {
+      "job": "claims-check",
+      "on": true,
+      "state_check": true,
+      "dashboard": true
+    },
+    "x_stream": {
+      "job": "x-stream",
+      "on": false,
+      "rules_file": "themes.json",
+      "max_rules": 10,
+      "mode": "poll",
+      "poll_job": "x-poll",
+      "poll_max": 12,
+      "_about": "mode is the owner's choice: `poll` (default) runs the rules as the scheduled x-poll job through channels.search, `websocket` is the always-on x-stream job; `x_stream.py rules --apply` goes live only in websocket mode while the stream's effective X read driver is twitterapi. poll_max is the per-query bound (12 at most)."
+    },
+    "site": {
+      "_about": "where a published post lives on the brand's own site: `post_url` is the canonical URL of a Blog row by its slug (the CTA every teaser must carry, gate_lint `lint: cta`; autopilot's link replies); `webhook_url` is the site's rebuild hook publish.py --webhook POSTs to with <env_prefix>WEBHOOK_SECRET as bearer, empty = no webhook. setup writes the real values into engine.local.json.",
+      "post_url": "https://www.example.com/insights/{slug}",
+      "webhook_url": ""
+    },
+    "store": {
+      "_about": "where the acts log lives: `files` is state/acts.jsonl, the only driver built (scripts/store.py).",
+      "driver": "files"
+    },
+    "secrets": {
+      "required": [
+        "TWITTERAPI_IO_API_KEY"
+      ],
+      "optional": [
+        "APIFY_TOKEN",
+        "LINKEDIN_ACCESS_TOKEN",
+        "LINKEDIN_REFRESH_TOKEN",
+        "LINKEDIN_CLIENT_ID",
+        "LINKEDIN_CLIENT_SECRET",
+        "LINKEDIN_ORG_ID",
+        "LINKEDIN_MEMBER_ID",
+        "CLAUDE_CODE_OAUTH_TOKEN"
+      ]
+    },
+    "plugins": {
+      "_marketplace_about": "the git URL of the Claude Code plugin marketplace the plugins come from; the template ships none (set it once with `config.py set plugins.marketplace <git url>`, which writes engine.local.json, or edit this file)",
+      "marketplace": "",
+      "marketplace_name": "atelier",
+      "names": [
+        "atelier@atelier",
+        "salon@atelier",
+        "motion@atelier"
+      ],
+      "_interactive_only_about": "plugins a person drives and a schedule does not: cycle.sh and corpus_cycle_daily.sh switch them off for the headless run alone (`engine.py plugins --headless-settings`, passed as --settings), so the Motion plugin's session hook, which may install npm packages, never runs at the start of a scheduled job",
+      "interactive_only": [
+        "motion@atelier"
+      ],
+      "scope": "project",
+      "_roles_about": "Which plugin agent or skill plays which role (scripts/roles.py). use: <plugin>:<name>, as it is called. kind: agent or skill. version: the plugin version the brief was read against; engine.py doctor fails when the installed plugin is another. brief: the file under the engine's root (briefs/, skills/, commands/) that carries this repository's rules for the role, since a plugin agent knows none. fallback: what happens in a checkout where the plugin is not installed. A brand changes a role in brand.json (plugins.roles), never here.",
+      "roles": {
+        "voice-pass": {
+          "use": "atelier:brand-voice-keeper",
+          "kind": "agent",
+          "version": "0.3.0",
+          "brief": "briefs/workflows/voice.md",
+          "fallback": "the gate reads the drafts as the writer left them"
+        },
+        "blog-slots": {
+          "use": "salon:campaign-strategist",
+          "kind": "agent",
+          "version": "0.3.0",
+          "brief": "briefs/workflows/slots.md",
+          "fallback": "no slots are picked this week; a person picks them"
+        },
+        "engagement-drafts": {
+          "use": "salon:engagement-manager",
+          "kind": "agent",
+          "version": "0.3.0",
+          "brief": "briefs/workflows/engage.md",
+          "fallback": "no reply or comment is drafted this run"
+        },
+        "retro": {
+          "use": "salon:campaign-retro",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "briefs/workflows/readout.md",
+          "fallback": "the readout step writes the retro as its brief reads"
+        },
+        "second-reviewer": {
+          "use": "salon:adversarial-refinement",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "briefs/workflows/gate-second.md",
+          "fallback": "the second reviewer attacks each claim as its brief reads"
+        },
+        "platform-fit": {
+          "use": "salon:trend-to-content",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "skills/theme-post/SKILL.md",
+          "fallback": "the writer drafts from the theme-post skill alone"
+        },
+        "hooks": {
+          "use": "salon:hook-writing",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "skills/theme-post/SKILL.md",
+          "fallback": "the writer drafts from the theme-post skill alone"
+        },
+        "candidate-ranking": {
+          "use": "salon:post-audit",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "briefs/candidate-ranking.md",
+          "fallback": "the writer ranks its candidates against voice.md"
+        },
+        "thread-format": {
+          "use": "salon:x-thread",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "briefs/thread-format.md",
+          "fallback": "the writer follows the format's structure in formats.json"
+        },
+        "hypothesis": {
+          "use": "atelier:ab-test-design",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "briefs/hypothesis.md",
+          "fallback": "the writer states the hypothesis from the theme-post skill, step 4c"
+        },
+        "candidates": {
+          "use": "atelier:copywriter",
+          "kind": "agent",
+          "version": "0.3.0",
+          "brief": "briefs/candidates.md",
+          "fallback": "the writer writes all three candidates itself"
+        },
+        "narrative": {
+          "use": "atelier:narrative-architect",
+          "kind": "agent",
+          "version": "0.3.0",
+          "brief": "briefs/candidates.md",
+          "fallback": "the writer writes all three candidates itself"
+        },
+        "comment-drafts": {
+          "use": "salon:comment-strategy",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "briefs/engagement-drafts.md",
+          "fallback": "the engagement brief alone"
+        },
+        "reply-drafts": {
+          "use": "salon:reply-playbook",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "briefs/engagement-drafts.md",
+          "fallback": "the engagement brief alone"
+        },
+        "send-timing": {
+          "use": "salon:launch-window",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "briefs/send-timing.md",
+          "fallback": "no time is suggested; the scheduled send times stand"
+        },
+        "community": {
+          "use": "salon:community-manager",
+          "kind": "agent",
+          "version": "0.3.0",
+          "brief": "briefs/community.md",
+          "fallback": "nothing is drafted for those channels",
+          "when": "a stream lists Telegram or Discord among its channels"
+        },
+        "release-staging": {
+          "use": "atelier:release-narrator",
+          "kind": "agent",
+          "version": "0.3.0",
+          "brief": "briefs/release-staging.md",
+          "fallback": "/announce shows the plan without a staging"
+        },
+        "motion-direction": {
+          "use": "atelier:motion-direction",
+          "kind": "skill",
+          "version": "0.3.0",
+          "brief": "briefs/motion-direction.md",
+          "fallback": "the motion-post skill alone"
+        },
+        "film": {
+          "use": "motion:video",
+          "kind": "skill",
+          "version": "0.1.5",
+          "brief": "commands/motion.md",
+          "fallback": "no film is made; the text card stands",
+          "when": "a person asks for a film with /motion <id> --film"
+        },
+        "film-render": {
+          "use": "motion:render",
+          "kind": "skill",
+          "version": "0.1.5",
+          "brief": "commands/motion.md",
+          "fallback": "no film is rendered",
+          "when": "a person asks for a film with /motion <id> --film"
+        }
+      }
+    },
+    "instance": {
+      "_about": "What `engine new-instance` writes into a new instance's .claude/settings.json: the marketplace the comms-engine plugin comes from (a Claude Code marketplace source). A fork names its own here or passes --marketplace owner/repo.",
+      "marketplace": {
+        "source": "github",
+        "repo": "lama-assaf/comms-engine-template"
+      }
+    },
+    "host": {
+      "_about": "The instance's host (docs/07-hosting.md), set per machine in engine.local.json. claude_token_set: the date (YYYY-MM-DD) CLAUDE_CODE_OAUTH_TOKEN was stored, written by `engine secrets --set CLAUDE_CODE_OAUTH_TOKEN`; the token from `claude setup-token` lasts a year and doctor warns after 330 days. serve_name: the Tailscale Serve name of this Mac (<machine>.<tailnet>.ts.net) the control page answers on, besides localhost; empty, it answers on localhost alone. roles: tailnet login -> role (alpha, beta, team) for requests through Tailscale Serve; set ONLY in the gitignored engine.local.json, never here, so no login reaches a tracked file; the control page reads it from there alone.",
+      "claude_token_set": "",
+      "serve_name": "",
+      "roles": {}
+    },
+    "backup": {
+      "_about": "The daily backup job (scripts/backup.py). push: false keeps each commit on this Mac; true pulls with rebase and pushes to the branch's upstream with the Mac's deploy key (never a file here). Set it per machine: engine config set backup.push true.",
+      "push": false
+    },
+    "inbound": {
+      "job": "inbound",
+      "_about": "the inbound poll (inbound.py). The X half stays off until listen.x_own_price_signoff is recorded and channels.x_own.<stream> is composio; the LinkedIn half runs only when the stream's LinkedIn composio account is linked. Patterns only: no handle, no third party's text."
+    },
+    "motion": {
+      "_about": "generate_signoff: the owner's dated cost sign-off for the Motion plugin's paid skill, motion:generate (generated images, voice and music). Empty, the skill is refused by the PreToolUse hook on the Skill tool (hooks/guard_skills.py). A person records one per machine, in words and scoped: config.py set motion.generate_signoff \"<date>: <role>, <what and how much>\". It ships empty. Whether cards are made at all is cycle.motion.",
+      "generate_signoff": ""
+    },
+    "reactions": {
+      "job": "engagement",
+      "_about": "likes and reposts (scripts/reactions.py), run by the engagement job after the reply drafts. live: false keeps the scheduled sender dry (every check, nothing sent); true lets it send what the review modes allow. per_run: the most reactions one run sends. spacing_seconds: the wait between two sends. window_days: how far back the listening files are read for candidates. The day's caps are the stream's reactions_per_day in brand.json; a like on X goes out on a person's click only.",
+      "live": false,
+      "per_run": 3,
+      "spacing_seconds": 45,
+      "window_days": 3
+    },
+    "workflows": {
+      "_about": "The cycle as workflows that code runs (scripts/workflow.py; `engine.py run <workflow>` is its dry run). Each has `what` (one line), `steps` and optionally `when` (config: a true/false parameter; weekday: ISO weekdays; month_start; channels: the stream lists one of these channels; after: an earlier workflow's output field that must not be empty), `optional` (a failure is recorded and the chain goes on) and `probe` (waiting: how many gated items wait for a person). A step is `run` (a script), `model` (one `claude -p`: agent (the engine's own as `comms-engine:<name>`, a plugin's as `<plugin>:<name>`), prompt file under briefs/workflows/, its own budget_usd, a narrow tool list, the keys its JSON reply must carry, and `runlog` when the agent holds no Bash), `each` (one script call per row the model returned) or `again` (re-gate what the step edited, then the step once more). Widen a `tools` list here, never in a prompt.",
+      "pull": {
+        "what": "the desk's decisions, edits and reviews onto disk, before anything reads them",
+        "steps": [
+          {
+            "run": [
+              "engine",
+              "desk_sync",
+              "--pull"
+            ]
+          }
+        ]
+      },
+      "listen": {
+        "what": "the listening pass: X and primary sources, then signals.json and the claim candidates",
+        "when": {
+          "config": "cycle.listen"
+        },
+        "steps": [
+          {
+            "model": {
+              "agent": "comms-engine:listener",
+              "prompt": "listen.md",
+              "budget_usd": 5,
+              "tools": [
+                "Bash(engine listen*)",
+                "Bash(engine runlog*)",
+                "Bash(engine config*)",
+                "Read",
+                "Glob",
+                "Grep",
+                "WebSearch",
+                "WebFetch",
+                "Edit(state/signals.json)"
+              ],
+              "expects": {
+                "findings": "int",
+                "content": "int",
+                "conversation": "int"
+              }
+            }
+          },
+          {
+            "run": [
+              "engine",
+              "state_check"
+            ]
+          },
+          {
+            "run": [
+              "engine",
+              "review",
+              "evidence"
+            ],
+            "_about": "keeps what listening read, so a draft resting on a source still checks after the next pass"
+          },
+          {
+            "run": [
+              "engine",
+              "research_store",
+              "watch"
+            ]
+          }
+        ]
+      },
+      "plan": {
+        "what": "the handle inventory inside its window, then the planning queries per theme",
+        "steps": [
+          {
+            "run": [
+              "engine",
+              "inventory"
+            ],
+            "ok_exits": [
+              0,
+              1
+            ],
+            "_ok_exits_about": "exit 1 says a handle check was inconclusive; it is carried to a person and never holds the drafts"
+          },
+          {
+            "run": [
+              "engine",
+              "plan_queries"
+            ]
+          }
+        ]
+      },
+      "draft": {
+        "what": "one draft per content finding, into the drafting queue",
+        "steps": [
+          {
+            "model": {
+              "agent": "comms-engine:theme-writer",
+              "prompt": "draft.md",
+              "budget_usd": 5,
+              "tools": [
+                "Bash(engine repo*)",
+                "Bash(engine gate_lint*)",
+                "Bash(engine memory*)",
+                "Bash(engine predictions*)",
+                "Bash(engine livetests*)",
+                "Bash(engine plan_queries --dry-run*)",
+                "Bash(engine plan_queries --draw*)",
+                "Bash(engine runlog*)",
+                "Bash(engine config*)",
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(state/queue.json)",
+                "Edit(Content/Calendar/**)",
+                "Agent(atelier:copywriter)",
+                "Agent(atelier:narrative-architect)"
+              ],
+              "expects": {
+                "drafted": "int",
+                "ids": "list",
+                "formats": "list"
+              }
+            }
+          },
+          {
+            "run": [
+              "engine",
+              "state_check"
+            ]
+          }
+        ]
+      },
+      "voice": {
+        "what": "the voice keeper reads the new drafts against voice.md, before the gate",
+        "when": {
+          "config": "cycle.voice_pass",
+          "after": {
+            "workflow": "draft",
+            "field": "drafted"
+          }
+        },
+        "optional": true,
+        "steps": [
+          {
+            "model": {
+              "agent": "atelier:brand-voice-keeper",
+              "prompt": "voice.md",
+              "budget_usd": 1.5,
+              "runlog": "voice",
+              "tools": [
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(state/queue.json)"
+              ],
+              "expects": {
+                "read": "int",
+                "rewritten": "int",
+                "changes": "list"
+              }
+            }
+          },
+          {
+            "run": [
+              "engine",
+              "state_check"
+            ]
+          }
+        ]
+      },
+      "gate": {
+        "what": "the deterministic gate, two reviewers who return findings, then code checks them and stamps the verdict",
+        "probe": "waiting",
+        "steps": [
+          {
+            "run": [
+              "engine",
+              "gate_lint",
+              "--write"
+            ],
+            "ok_exits": [
+              0,
+              1
+            ],
+            "_ok_exits_about": "exit 1 says an item is blocked, which is the gate's answer, not a fault"
+          },
+          {
+            "model": {
+              "agent": "comms-engine:gatekeeper",
+              "prompt": "gate.md",
+              "budget_usd": 3,
+              "tools": [
+                "Bash(engine gate_lint --json*)",
+                "Bash(engine memory*)",
+                "Bash(engine claims_check --dry-run*)",
+                "Bash(engine review schema*)",
+                "Bash(engine review sentences*)",
+                "Read",
+                "Glob",
+                "Grep"
+              ],
+              "expects": {
+                "items": "list"
+              }
+            }
+          },
+          {
+            "model": {
+              "prompt": "gate-second.md",
+              "budget_usd": 2,
+              "tools": [
+                "Skill(salon:adversarial-refinement)",
+                "Bash(engine memory*)",
+                "Bash(engine review sentences*)",
+                "Read",
+                "Glob",
+                "Grep"
+              ],
+              "expects": {
+                "items": "list"
+              }
+            },
+            "_about": "the second reading: a different brief, no sight of the first; a disagreement blocks"
+          },
+          {
+            "run": [
+              "engine",
+              "review",
+              "apply",
+              "--first",
+              "{reply_1}",
+              "--second",
+              "{reply_2}"
+            ]
+          },
+          {
+            "run": [
+              "engine",
+              "state_check"
+            ]
+          }
+        ]
+      },
+      "distribute": {
+        "what": "saved edits and decisions onto the notes, approved items to Ready, new drafts ingested as notes",
+        "steps": [
+          {
+            "model": {
+              "agent": "comms-engine:distributor",
+              "prompt": "distribute.md",
+              "budget_usd": 3,
+              "tools": [
+                "Bash(engine apply_edits*)",
+                "Bash(engine repo*)",
+                "Bash(engine publish*)",
+                "Bash(engine guardrails*)",
+                "Bash(engine runlog*)",
+                "Bash(engine config*)",
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(Content/Calendar/**)"
+              ],
+              "expects": {
+                "decisions_applied": "int",
+                "edits_applied": "int",
+                "published": "int",
+                "edited_ids": "list",
+                "conflicts": "list"
+              }
+            }
+          },
+          {
+            "again": {
+              "if": "edited_ids",
+              "after": "gate"
+            }
+          },
+          {
+            "run": [
+              "engine",
+              "repo",
+              "--all"
+            ]
+          }
+        ]
+      },
+      "push": {
+        "what": "the notes back to the desk, then the local page",
+        "probe": "waiting",
+        "steps": [
+          {
+            "run": [
+              "engine",
+              "desk_sync",
+              "--push"
+            ]
+          },
+          {
+            "run": [
+              "engine",
+              "build_dashboard"
+            ]
+          }
+        ]
+      },
+      "editor": {
+        "what": "the weekly editor: the coming seven days read as a whole, holds written as reviews",
+        "when": {
+          "config": "cycle.weekday_flags.editor",
+          "weekday": [
+            1
+          ]
+        },
+        "steps": [
+          {
+            "model": {
+              "prompt": "editor.md",
+              "budget_usd": 2,
+              "tools": [
+                "Bash(engine livetests*)",
+                "Bash(engine desk_sync*)",
+                "Bash(engine runlog*)",
+                "Bash(engine config*)",
+                "Read",
+                "Glob",
+                "Grep"
+              ],
+              "expects": {
+                "read": "int",
+                "held": "int",
+                "ids_held": "list"
+              }
+            }
+          }
+        ]
+      },
+      "slots": {
+        "what": "next week's two blog slots, into strategy.json",
+        "when": {
+          "config": "cycle.weekday_flags.slots",
+          "weekday": [
+            5
+          ]
+        },
+        "steps": [
+          {
+            "model": {
+              "agent": "salon:campaign-strategist",
+              "prompt": "slots.md",
+              "budget_usd": 1.5,
+              "runlog": "slots",
+              "tools": [
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(state/strategy.json)"
+              ],
+              "expects": {
+                "picks": "int",
+                "week": "str"
+              }
+            }
+          },
+          {
+            "model": {
+              "prompt": "send-timing.md",
+              "budget_usd": 0.75,
+              "tools": [
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(state/strategy.json)",
+                "Skill(salon:launch-window)"
+              ],
+              "expects": {
+                "timed": "int"
+              }
+            },
+            "_about": "a plugin agent's own tool list holds no Skill, so the skill runs in a step of its own"
+          },
+          {
+            "run": [
+              "engine",
+              "state_check"
+            ]
+          }
+        ]
+      },
+      "readout": {
+        "what": "the monthly readout, the topic map and the campaign retro",
+        "when": {
+          "config": "cycle.weekday_flags.readout",
+          "month_start": true
+        },
+        "steps": [
+          {
+            "run": [
+              "engine",
+              "readout"
+            ]
+          },
+          {
+            "model": {
+              "prompt": "readout.md",
+              "budget_usd": 2,
+              "runlog": "readout",
+              "tools": [
+                "Bash(engine research_store topic-map*)",
+                "Skill(salon:campaign-retro)",
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(.atelier/memory/campaigns/**)",
+                "Edit(.atelier/memory/lessons.md)"
+              ],
+              "expects": {
+                "retro_written": "bool",
+                "lessons": "int"
+              }
+            }
+          }
+        ]
+      },
+      "motion": {
+        "what": "a card for each gated blog post that lacks one",
+        "when": {
+          "config": "cycle.motion"
+        },
+        "optional": true,
+        "steps": [
+          {
+            "run": [
+              "engine",
+              "motion",
+              "pending",
+              "--render"
+            ]
+          },
+          {
+            "model": {
+              "agent": "comms-engine:motion-designer",
+              "prompt": "motion.md",
+              "budget_usd": 2,
+              "tools": [
+                "Bash(engine motion*)",
+                "Bash(engine runlog*)",
+                "Bash(engine config*)",
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(Content/Motion/**)",
+                "Skill(atelier:motion-direction)"
+              ],
+              "expects": {
+                "made": "int",
+                "refused": "int",
+                "ids_refused": "list"
+              }
+            }
+          }
+        ]
+      },
+      "story": {
+        "what": "the story of this run, in plain words, and any theme words that are out of date",
+        "optional": true,
+        "steps": [
+          {
+            "model": {
+              "agent": "comms-engine:storyteller",
+              "prompt": "story.md",
+              "budget_usd": 1.5,
+              "tools": [
+                "Bash(engine story*)",
+                "Bash(engine theme_words*)",
+                "Bash(engine runlog*)",
+                "Bash(engine config*)",
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(state/story/**)"
+              ],
+              "expects": {
+                "published": "bool",
+                "cover": "str",
+                "questions": "int"
+              }
+            }
+          }
+        ]
+      },
+      "engage": {
+        "what": "reply and comment drafts for the last three days' posts; patterns only, nothing sent",
+        "steps": [
+          {
+            "model": {
+              "agent": "salon:engagement-manager",
+              "prompt": "engage.md",
+              "budget_usd": 3,
+              "runlog": "engage",
+              "tools": [
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(state/engagement.json)"
+              ],
+              "expects": {
+                "proposals": "int",
+                "placed": "list",
+                "outcomes": "list"
+              }
+            }
+          },
+          {
+            "run": [
+              "engine",
+              "state_check"
+            ]
+          },
+          {
+            "each": {
+              "from": "placed",
+              "run": [
+                "engine",
+                "engage",
+                "record",
+                "--item",
+                "{item}",
+                "--theme",
+                "{theme}",
+                "--platform",
+                "{platform}",
+                "--target",
+                "{target}",
+                "--tier",
+                "{tier}",
+                "--shape",
+                "{shape}",
+                "--comment-id",
+                "{comment_id}",
+                "--stream",
+                "{stream_name}"
+              ]
+            }
+          },
+          {
+            "each": {
+              "from": "outcomes",
+              "run": [
+                "engine",
+                "engage",
+                "outcome",
+                "{id}",
+                "{result}"
+              ]
+            }
+          },
+          {
+            "model": {
+              "prompt": "engage-craft.md",
+              "budget_usd": 1.5,
+              "tools": [
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(state/engagement.json)",
+                "Skill(salon:comment-strategy)",
+                "Skill(salon:reply-playbook)"
+              ],
+              "expects": {
+                "revised": "int"
+              }
+            },
+            "_about": "a plugin agent's own tool list holds no Skill, so the skills run in a step of their own"
+          },
+          {
+            "run": [
+              "engine",
+              "state_check"
+            ]
+          }
+        ]
+      },
+      "community": {
+        "what": "drafts for a stream's Telegram or Discord, from what is already gated; nothing is sent",
+        "when": {
+          "channels": [
+            "telegram",
+            "discord"
+          ]
+        },
+        "optional": true,
+        "steps": [
+          {
+            "model": {
+              "agent": "salon:community-manager",
+              "prompt": "community.md",
+              "budget_usd": 1.5,
+              "runlog": "community",
+              "tools": [
+                "Read",
+                "Glob",
+                "Grep",
+                "Edit(state/engagement.json)"
+              ],
+              "expects": {
+                "proposals": "int"
+              }
+            }
+          },
+          {
+            "run": [
+              "engine",
+              "state_check"
+            ]
+          }
+        ]
+      },
+      "react": {
+        "what": "likes and reposts: plan the candidates from what was read, then send what is due, inside the caps",
+        "optional": true,
+        "steps": [
+          {
+            "run": [
+              "engine",
+              "reactions",
+              "plan"
+            ]
+          },
+          {
+            "run": [
+              "engine",
+              "reactions",
+              "send-due",
+              "--scheduled"
+            ],
+            "_about": "dry unless reactions.live is true; a like on X always waits for a person's click"
+          },
+          {
+            "run": [
+              "engine",
+              "state_check"
+            ]
+          }
+        ]
+      }
+    },
+    "chains": {
+      "_about": "A chain is workflows in order; a scheduled job runs one (`workflow.py chain weekday`, from cycle.sh). The runner stops at the first failure and says which workflow failed; the whole chain stays inside cycle.budget_usd.",
+      "weekday": [
+        "pull",
+        "listen",
+        "plan",
+        "draft",
+        "voice",
+        "gate",
+        "distribute",
+        "push",
+        "editor",
+        "slots",
+        "readout",
+        "motion",
+        "story"
+      ],
+      "engagement": [
+        "engage",
+        "community",
+        "react"
+      ]
+    }
+  },
+  "streams": {
+    "acme": {
+      "corpus_root": "__HOME__/Documents/Strategy",
+      "themes_file": "themes.json"
+    }
+  },
+  "_streams_about": "per-stream engine-local settings, keyed by registry slug; the root stream's key is the placeholder slug here and follows brand.json's slug when the files are merged (config.py re-keys it; nothing edits this file). What a person sets per stream (narrator, owner, autopilot, review modes, caps) is in brand.json. corpus_root is a placeholder until `setup corpus` writes the real one into engine.local.json."
+}

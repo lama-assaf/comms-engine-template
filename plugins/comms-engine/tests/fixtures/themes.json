@@ -1,0 +1,59 @@
+{
+  "_about": "Engine-local search material for the fixture brand: per theme one X advanced-search term, one LinkedIn search-bar string and one keyword set, joined to tests/fixtures/memory/themes.md by tag. A fixture, written 2026-11-05; the terms are invented. `ignore.keywords` names the other stream so its posts are dropped from this stream's listening, which is what test_x_stream asserts about the partners rule.",
+  "_source_of_truth": {
+    "themes": "tests/fixtures/memory/themes.md",
+    "handles": "tests/fixtures/memory/handles.md",
+    "handles_private": "tests/fixtures/memory/handles.private.md"
+  },
+  "mentions": {
+    "x_search": "(\"Acme\" OR \"Acme platform\") lang:en",
+    "linkedin_search": "Acme platform",
+    "keywords": ["acme"]
+  },
+  "ignore": {
+    "keywords": ["betalabs", "beta labs"]
+  },
+  "search_terms": {
+    "#ExampleTheme": {
+      "x_search": "(\"credential root\" OR \"issuer qualification\") (wallet OR credential) lang:en -filter:replies",
+      "linkedin_search": "credential root issuer qualification wallet",
+      "keywords": ["root", "issuer", "credential"]
+    },
+    "#SecondTheme": {
+      "x_search": "(\"closed set\" OR \"vetted parties\") settlement lang:en -filter:replies",
+      "linkedin_search": "closed set vetted parties settlement",
+      "keywords": ["closed set", "vetted", "settlement"]
+    },
+    "#ThirdTheme": {
+      "x_search": "(\"accountable record\" OR \"answerable ledger\") lang:en -filter:replies",
+      "linkedin_search": "accountable record answerable ledger",
+      "keywords": ["accountable", "answerable"]
+    },
+    "#FourthTheme": {
+      "x_search": "(\"currency rail\" OR \"rule travels\") stablecoin lang:en -filter:replies",
+      "linkedin_search": "currency rail rules stablecoin",
+      "keywords": ["rail", "currency rule"]
+    },
+    "#FifthTheme": {
+      "x_search": "(\"accounted compute\" OR \"jurisdiction compute\") lang:en -filter:replies",
+      "linkedin_search": "accounted compute jurisdiction",
+      "keywords": ["compute", "jurisdiction"]
+    },
+    "#SixthTheme": {
+      "x_search": "(\"law is the spec\" OR \"compliance by design\") lang:en -filter:replies",
+      "linkedin_search": "compliance by design law is the spec",
+      "keywords": ["compliance by design", "existing law"]
+    },
+    "#SeventhTheme": {
+      "x_search": "(\"agent mandate\" OR \"delegated authority\") agents lang:en -filter:replies",
+      "linkedin_search": "agent mandate delegated authority",
+      "keywords": ["mandate", "delegated"]
+    },
+    "#EighthTheme": {
+      "x_search": "(\"open standard\" OR \"private register\") identity lang:en -filter:replies",
+      "linkedin_search": "open standard private register identity",
+      "keywords": ["open standard", "register"]
+    }
+  },
+  "_term_log": []
+}

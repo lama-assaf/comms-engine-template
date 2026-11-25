@@ -1,0 +1,45 @@
+{
+  "_about": "The one setup file of this project: who the brand is, each stream it speaks as, how sends are driven, which jobs run and which plugin plays which role. `engine init` and the dashboard's Setup page write it, so nobody has to open it. the engine's engine.json (plugins/comms-engine/ in the template) holds the shipped defaults; this file is merged over it, engine.local.json (per machine, gitignored) over this, the environment over all. `engine validate` checks it and `engine apply` renders the tables of .atelier/memory/streams.md from it. Never a secret, never a person's name. brand.example.json is a filled-in one.",
+  "brand": {"slug": "acme", "name": "Acme"},
+  "_engine_about": "The comms-engine plugin version this brand runs. `engine doctor` fails when the loaded plugin is another; move it after reading the release, as a tracked change.",
+  "engine": {"version": "1.0.0"},
+  "_streams_about": "One entry per stream, the brand's own first, keyed by slug. `owner` is confirmed or unset, never a name. `autopilot` is nothing (drafts only), `by switch` (each kind of send follows its review mode), or the rule a decision file set. `review` is the default mode per kind of send: review (a person decides) or auto (what passes the checks goes out); a person changes one on the dashboard, as a recorded act. A stream stays shut until its owner is confirmed, its voice is written and its quiet hours are set.",
+  "streams": {
+    "acme": {
+      "name": "Acme",
+      "narrator": "- (set at onboarding)",
+      "owner": "unset",
+      "objectives": "intent engagement (saves, quote posts, substantive replies, reposts, link clicks); reach: not opted in; north star: set at onboarding",
+      "autopilot": "nothing",
+      "channels": {},
+      "review": {"post": "review", "reply": "review", "comment": "review", "like": "review", "repost": "review", "quote": "review", "hold": "review"},
+      "drafts_only": "all",
+      "posts_per_day": {"x": 0, "linkedin": 0, "blog_per_week": 0},
+      "reactions_per_day": {"x": {"like": 0, "repost": 0}, "linkedin": {"like": 0, "repost": 0}},
+      "quiet_hours": "all hours until onboarded",
+      "blocked_topics": "everything, until this stream's `instincts.md` never-say lines and its `handles.private.md` denylist are written",
+      "hold_for_review": "everything",
+      "corpus_status": "candidate",
+      "pair_rules": []
+    }
+  },
+  "_drivers_about": "How sends and X reads are carried, for every stream here (a stream may carry its own `drivers`). write: native or composio. x_read (listening) and x_own (our own posts and mentions): twitterapi or composio; composio reads also wait for their price sign-off.",
+  "drivers": {"write": "native", "x_read": "twitterapi", "x_own": "twitterapi"},
+  "_jobs_about": "Which scheduled jobs are on. A job set false is left out of the all-jobs install; `engine enable <job>` still loads one by name.",
+  "jobs": {
+    "corpus-cycle": true,
+    "social-engine": true,
+    "autopilot": true,
+    "engagement": true,
+    "score": true,
+    "claims-check": true,
+    "nosleep": true,
+    "x-stream": false,
+    "x-poll": false,
+    "inbound": false,
+    "control": false,
+    "backup": false
+  },
+  "_plugins_about": "Which plugin agent or skill plays which role, with its pinned version and the brief that carries this repository's rules. Empty keeps the defaults of engine.json.",
+  "plugins": {"roles": {}}
+}

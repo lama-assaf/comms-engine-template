@@ -1,0 +1,19 @@
+# The Python packages the engine's scripts import, pinned to the versions the test suite
+# passes on (Python 3.11 to 3.14; the suite itself needs 3.11). Everything else is the standard library.
+#
+#   python3 -m pip install -r requirements.txt
+#
+# The research store's graph mode is optional and not listed: see
+# research-store/README.md for graphiti-core.
+
+# the engine: calendar notes (repo.py)
+PyYAML==6.0.3
+
+# the corpus reader (skills/deck-reader/scripts/)
+pdfplumber==0.11.9
+pdfminer.six==20251230
+python-pptx==1.0.2
+python-docx==1.2.0
+
+# motion cards and announcement banners (motion.py, announce_check.py)
+pillow==13.0.0

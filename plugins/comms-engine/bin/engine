@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+"""
+engine - the comms engine's one command.
+
+  engine <console command> [args]   engine.py's own: doctor, validate, apply, status, run, ...
+  engine <script> [args]            scripts/<script>.py (or schedule/, or the deck reader's), `-` read as `_`
+  engine --list                     every name it answers to
+
+Why: the scripts used to be called by their place in one repository
+(`python3 scripts/listen.py`). Packaged as a plugin, the
+engine lives wherever Claude Code installed it, and this file is on the Bash
+tool's PATH (the plugin's bin/), on every `claude -p` workflow.py starts, and
+behind the launchd shim. It finds the instance (scripts/paths.py: the
+COMMS_ENGINE_INSTANCE variable, CLAUDE_PROJECT_DIR, then the nearest parent of
+the working directory holding brand.json), exports it, and runs the script
+there, so a relative path in a script means the instance's.
+"""
+import os
+import sys
+
+HOME = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.insert(0, os.path.join(HOME, "scripts"))
+import paths  # noqa: E402
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__.strip())
+        return 0 if argv else 2
+    if argv[0] == "--list":
+        print("\n".join(paths.names()))
+        return 0
+    cmd = paths.expand(["engine", *argv], python=sys.executable)
+    if cmd is None:
+        print(f"engine: no command or script {argv[0]!r}; `engine --list` names them", file=sys.stderr)
+        return 2
+    inst = paths.instance()
+    os.environ[paths.ENV] = inst
+    os.environ["COMMS_ENGINE_HOME"] = HOME
+    os.chdir(inst)
+    os.execv(cmd[0], cmd)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

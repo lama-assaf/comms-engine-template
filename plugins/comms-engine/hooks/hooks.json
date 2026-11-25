@@ -1,0 +1,41 @@
+{
+  "_about": "The engine's Claude Code hooks, loaded with the plugin in every instance that enables comms-engine@comms-engine. SessionStart opens the session with the latest monitoring pass and what is new in memory; PreToolUse on Bash refuses a raw platform write that bypasses channels.send(); PreToolUse on Skill refuses a paid skill (motion:generate) without a recorded cost sign-off. All three read only. The scripts find the instance through scripts/paths.py (CLAUDE_PROJECT_DIR, which Claude Code exports to every hook).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/session_brief.py\"",
+            "timeout": 20,
+            "statusMessage": "Reading the latest monitoring pass and new lessons"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/guard_posting.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking for a raw platform write"
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/guard_skills.py\"",
+            "timeout": 10,
+            "statusMessage": "Checking for a paid skill's sign-off"
+          }
+        ]
+      }
+    ]
+  }
+}

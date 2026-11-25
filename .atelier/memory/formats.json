@@ -1,0 +1,53 @@
+{
+  "_about": "The formats this stream may write in, as data: scripts/plan_queries.py draws one per draft (with a logic) by weight over how each did before, inside the 60/25/15 budget of proven, variation and experiment, and writes the seed and the draw on the note; the theme-writer follows the drawn format's `structure`. Read through scripts/memory.py (load_formats). A person edits this file; a stream without it writes theme posts only. `channels` are the channels a format fits (blog, linkedin, x). `weight` is how often to try it before any result exists (1 when left out). `needs_evidence: true` keeps a format off a theme whose licence is `held`: it cannot be written without a row at grade evidenced. `skill` names a plugin skill the writer uses for the format's own craft, where there is one.",
+  "formats": {
+    "theme-post": {
+      "name": "Theme post with teasers",
+      "when": "a content-shaped finding with a fact to anchor on, or a theme's introduction",
+      "structure": ["hook", "the change or the deadlock", "the structural reading", "the standing point: the theme's differentiator", "the honest limit, in the post's own words"],
+      "channels": ["blog", "linkedin", "x"], "length": "350 to 700 words; a LinkedIn teaser of 60 to 120 words and an X teaser, each re-cut", "weight": 3
+    },
+    "x-thread": {
+      "name": "X thread",
+      "when": "an argument with four to seven steps that each stand as one post",
+      "structure": ["the hook post, which stands alone", "one step of the argument per post", "the turn: what the reader did not expect", "the standing point", "the honest limit and the link"],
+      "channels": ["x"], "length": "5 to 8 posts, each under 280 characters", "weight": 2, "skill": "salon:x-thread"
+    },
+    "short-take": {
+      "name": "Short take",
+      "when": "one observation that needs no article behind it",
+      "structure": ["the observation, in one or two sentences", "why it is not the obvious reading", "the honest limit where it claims anything"],
+      "channels": ["linkedin", "x"], "length": "under 80 words on LinkedIn, one post on X", "weight": 2
+    },
+    "quote-commentary": {
+      "name": "Quote commentary",
+      "when": "someone else's public post, by an author we may name, says something our argument turns",
+      "structure": ["what they said, quoted or linked, never paraphrased into something else", "the one thing we add", "where we differ or what follows"],
+      "channels": ["linkedin", "x"], "length": "under 120 words", "weight": 1
+    },
+    "question": {
+      "name": "Question",
+      "when": "the honest position is that the question is open, and the audience holds part of the answer",
+      "structure": ["the question, as the hook", "why it is open: the two readings", "what would settle it"],
+      "channels": ["linkedin", "x"], "length": "under 100 words", "weight": 1
+    },
+    "data-note": {
+      "name": "Data note",
+      "when": "one figure from a primary source changes how a theme reads",
+      "structure": ["the figure, with its source and date", "what it measures and what it does not", "the reading", "the honest limit"],
+      "channels": ["blog", "linkedin", "x"], "length": "150 to 300 words", "weight": 1, "needs_evidence": true
+    },
+    "motion-card": {
+      "name": "Motion card",
+      "when": "a gated post has two or three lines that carry the argument on their own",
+      "structure": ["lines lifted word for word from the post", "the theme hashtag", "the link"],
+      "channels": ["linkedin", "x"], "length": "a card of 3 to 5 lines; the post it comes from is its text", "weight": 1
+    },
+    "case-story": {
+      "name": "Case story",
+      "when": "something of ours is evidenced: shown, signed or published by the party it concerns",
+      "structure": ["the situation, before", "what was done, with its evidence", "what changed, in the evidence's own terms", "what it does not show"],
+      "channels": ["blog", "linkedin"], "length": "400 to 800 words", "weight": 1, "needs_evidence": true
+    }
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "_about": "The brand's look, in one place. Every visual the engine makes reads this file: the story deck, the control page and the motion cards. Change the brand's look here and nowhere else.",
+  "_source": "Placeholder: replace with your brand's colours, typeface, corner radius and logo (an inline SVG for light and for dark backgrounds), taken from your website or brand guide.",
+  "name": "Acme",
+  "colors": {
+    "primary": "#1f2a44",
+    "accent": "#2a5bd7",
+    "ink": "#0b0b0b",
+    "on_primary": "#ffffff",
+    "surface": "#ffffff",
+    "paper": "#f7f7f5",
+    "tint": "#e8eefc",
+    "line": "#e1e0d9",
+    "muted": "#77776f"
+  },
+  "type": {
+    "family": "Inter",
+    "stack": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif",
+    "display_weight": 800,
+    "body_weight": 400
+  },
+  "shape": {
+    "radius": 8,
+    "gradients": "none",
+    "ui_radius": 18,
+    "_ui_radius": "The control page and the story deck: rounded and soft (owner, 2026-11-07: 'why so boxy'). radius stays the brand's rule for what it publishes."
+  },
+  "logo": {
+    "on_light": "",
+    "on_dark": ""
+  },
+  "voice": ".atelier/memory/voice.md",
+  "palette": {
+    "_about": "The solid colours the control page and the story deck paint with, beside the neutrals in colors (white, the greys, the ink). Owner's palette, 2026-11-07: 'use solid colors across and from this palette', 'keep grey/white as well'. Pages, themes and the deck's beats take a colour by position, so a colour follows its page or theme; roles name what critical, warning, good, action and info look like. Motion cards for posts keep colors (the brand's own). Shown pastel (owner, 2026-11-07): a soft fill of each colour with a deep shade of it for the text; set style to solid for full-strength fills.",
+    "colors": [
+      {
+        "name": "Strawberry Red",
+        "hex": "#f94144"
+      },
+      {
+        "name": "Atomic Tangerine",
+        "hex": "#f3722c"
+      },
+      {
+        "name": "Carrot Orange",
+        "hex": "#f8961e"
+      },
+      {
+        "name": "Coral Glow",
+        "hex": "#f9844a"
+      },
+      {
+        "name": "Tuscan Sun",
+        "hex": "#f9c74f"
+      },
+      {
+        "name": "Willow Green",
+        "hex": "#90be6d"
+      },
+      {
+        "name": "Seagrass",
+        "hex": "#43aa8b"
+      },
+      {
+        "name": "Dark Cyan",
+        "hex": "#4d908e"
+      },
+      {
+        "name": "Blue Slate",
+        "hex": "#577590"
+      },
+      {
+        "name": "Cerulean",
+        "hex": "#277da1"
+      }
+    ],
+    "roles": {
+      "critical": "Strawberry Red",
+      "warning": "Tuscan Sun",
+      "good": "Willow Green",
+      "action": "Cerulean",
+      "info": "Blue Slate"
+    },
+    "style": "pastel"
+  }
+}

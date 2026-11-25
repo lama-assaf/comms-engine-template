@@ -1,0 +1,7 @@
+# ── the private half of the handles inventory: NEVER committed ──
+# `handles.md` is the committed inventory; this companion carries the stealth
+# parties, the unsigned-draft parties and the denylist, and both runtimes merge
+# it on top of `handles.md` at read time. See "the private companion" in
+# `handles.md`.
+handles.private.md
+streams/*/handles.private.md

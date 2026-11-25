@@ -1,0 +1,112 @@
+{
+ "_about": "One labelled draft for scripts/gate_eval.py. `expect` is what the gate must do with it: block (the claim checks stop it), flag (a reviewer names the house-style fault; it is advice and never blocks) or pass. `rule` is the check it tests: claims, or one of the house-style rules a person may retire from the code (hook, tag line, cta, shape) once the reviewers catch every case of it. Every name, claim id and theme is the fixture brand's (tests/fixtures/memory).",
+ "id": "style-shape-repeats",
+ "rule": "shape",
+ "expect": "flag",
+ "why": "The same hook form, opening and closing as the three pieces before it.",
+ "item": {
+  "id": "G-style-shape-repeats",
+  "theme": "#ExampleTheme",
+  "slug": "a-root-is-not-a-wallet",
+  "title": "One thing holds. Another thing does not.",
+  "post": "On 2 November a regulator did a thing.\n\nThe middle of the argument.\n\nWhat we do not claim: nothing in this post asserts a deployed Acme capability.",
+  "teaser_linkedin": "A wallet holds a credential. It does not decide which root issued it.\n\nThe wallet programme is engineering. The root a company credential chains to is governance, and it is still open. That choice decides whether the credential is portable or merely valid at home.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+  "teaser_x": "A wallet holds a credential. It does not decide which root issued it.\n\nOne is engineering. The other is a governance decision nobody has taken in public yet.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+  "tags": [
+   "#ExampleTheme"
+  ],
+  "partner_tags": [],
+  "cta": "https://www.example.com/insights/a-root-is-not-a-wallet",
+  "cites": [
+   "C-acme-4"
+  ],
+  "stream": "Acme",
+  "query": "gaps",
+  "hypothesis": "hook form: a two-sentence contrast beats a single declarative on #ExampleTheme",
+  "predicted": "baseline",
+  "test_id": "T-acme-1",
+  "slot": {
+   "date": "2026-11-05"
+  }
+ },
+ "before": [
+  {
+   "id": "T-before-1",
+   "theme": "#ExampleTheme",
+   "slug": "before-1",
+   "title": "One thing holds. Another thing does not.",
+   "post": "On 2 November a regulator did a thing.\n\nThe middle of the argument.\n\nWhat we do not claim: nothing in this post asserts a deployed Acme capability.",
+   "teaser_linkedin": "A wallet holds a credential. It does not decide which root issued it.\n\nThe wallet programme is engineering. The root a company credential chains to is governance, and it is still open. That choice decides whether the credential is portable or merely valid at home.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+   "teaser_x": "A wallet holds a credential. It does not decide which root issued it.\n\nOne is engineering. The other is a governance decision nobody has taken in public yet.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+   "tags": [
+    "#ExampleTheme"
+   ],
+   "partner_tags": [],
+   "cta": "https://www.example.com/insights/a-root-is-not-a-wallet",
+   "cites": [
+    "C-acme-4"
+   ],
+   "stream": "Acme",
+   "query": "gaps",
+   "hypothesis": "hook form: a two-sentence contrast beats a single declarative on #ExampleTheme",
+   "predicted": "baseline",
+   "test_id": "T-acme-1",
+   "slot": {
+    "date": "2026-10-11"
+   },
+   "alpha_status": "approved"
+  },
+  {
+   "id": "T-before-2",
+   "theme": "#ExampleTheme",
+   "slug": "before-2",
+   "title": "One thing holds. Another thing does not.",
+   "post": "On 2 November a regulator did a thing.\n\nThe middle of the argument.\n\nWhat we do not claim: nothing in this post asserts a deployed Acme capability.",
+   "teaser_linkedin": "A wallet holds a credential. It does not decide which root issued it.\n\nThe wallet programme is engineering. The root a company credential chains to is governance, and it is still open. That choice decides whether the credential is portable or merely valid at home.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+   "teaser_x": "A wallet holds a credential. It does not decide which root issued it.\n\nOne is engineering. The other is a governance decision nobody has taken in public yet.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+   "tags": [
+    "#ExampleTheme"
+   ],
+   "partner_tags": [],
+   "cta": "https://www.example.com/insights/a-root-is-not-a-wallet",
+   "cites": [
+    "C-acme-4"
+   ],
+   "stream": "Acme",
+   "query": "gaps",
+   "hypothesis": "hook form: a two-sentence contrast beats a single declarative on #ExampleTheme",
+   "predicted": "baseline",
+   "test_id": "T-acme-1",
+   "slot": {
+    "date": "2026-10-12"
+   },
+   "alpha_status": "approved"
+  },
+  {
+   "id": "T-before-3",
+   "theme": "#ExampleTheme",
+   "slug": "before-3",
+   "title": "One thing holds. Another thing does not.",
+   "post": "On 2 November a regulator did a thing.\n\nThe middle of the argument.\n\nWhat we do not claim: nothing in this post asserts a deployed Acme capability.",
+   "teaser_linkedin": "A wallet holds a credential. It does not decide which root issued it.\n\nThe wallet programme is engineering. The root a company credential chains to is governance, and it is still open. That choice decides whether the credential is portable or merely valid at home.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+   "teaser_x": "A wallet holds a credential. It does not decide which root issued it.\n\nOne is engineering. The other is a governance decision nobody has taken in public yet.\n\n#ExampleTheme\nhttps://www.example.com/insights/a-root-is-not-a-wallet",
+   "tags": [
+    "#ExampleTheme"
+   ],
+   "partner_tags": [],
+   "cta": "https://www.example.com/insights/a-root-is-not-a-wallet",
+   "cites": [
+    "C-acme-4"
+   ],
+   "stream": "Acme",
+   "query": "gaps",
+   "hypothesis": "hook form: a two-sentence contrast beats a single declarative on #ExampleTheme",
+   "predicted": "baseline",
+   "test_id": "T-acme-1",
+   "slot": {
+    "date": "2026-10-13"
+   },
+   "alpha_status": "approved"
+  }
+ ]
+}

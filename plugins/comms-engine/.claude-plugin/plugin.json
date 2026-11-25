@@ -1,0 +1,11 @@
+{
+  "name": "comms-engine",
+  "displayName": "Comms engine",
+  "version": "1.0.0",
+  "description": "One communications engine for one business: listens to its themes, drafts against a memory of what it may claim, gates every draft, puts the decision before a person, sends what was approved through one checked send, and learns from what was published. Runs inside a brand's instance repository.",
+  "author": {
+    "name": "comms-engine maintainers"
+  },
+  "license": "Apache-2.0",
+  "keywords": ["communications", "social", "claims", "launchd"]
+}

@@ -1,0 +1,2 @@
+# What a contributor and CI need beyond requirements.txt: the linter, pinned (ruff.toml).
+ruff==0.17.4

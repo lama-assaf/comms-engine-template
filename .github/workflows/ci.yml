@@ -1,0 +1,74 @@
+# What every push to main and every pull request must pass: the linter, the engine's
+# test suite, and the two web apps (typecheck, the control page's build, the audits).
+# Nothing here needs a secret, posts, or calls a paid service: the suite runs on fixtures.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine:
+    name: engine (python ${{ matrix.python }})
+    # macOS, not Linux: the schedules are launchd agents, and the fresh-clone test renders
+    # them with schedule/install.sh, which fails on Linux (every other test passes there).
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.14"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      - name: Install the pinned packages
+        run: python -m pip install -r requirements.txt -r requirements-dev.txt
+      - name: Lint (ruff.toml)
+        run: ruff check plugins Tooling
+      - name: Tests
+        run: python -m unittest discover plugins/comms-engine/tests
+
+  web:
+    name: control page and desk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            plugins/comms-engine/ui/package-lock.json
+            Tooling/desk/package-lock.json
+      # ui/dist is committed so a clone runs without Node; this is what keeps it the
+      # build of ui/src and nothing else (the build is byte-for-byte reproducible).
+      - name: "Control page: typecheck, build, and the committed build matches"
+        working-directory: plugins/comms-engine/ui
+        run: |
+          npm ci
+          npm run build
+          test -z "$(git status --porcelain -- dist)" || { git status --short -- dist; echo "ui/dist is not the build of ui/src: run npm run build and commit dist"; exit 1; }
+      - name: "The setup command (npx): tests"
+        run: npm test
+      - name: "Desk: typecheck"
+        working-directory: Tooling/desk
+        run: |
+          npm ci
+          npx tsc --noEmit
+      - name: Audit both lockfiles (high and critical fail)
+        run: |
+          npm audit --audit-level=high --prefix plugins/comms-engine/ui
+          npm audit --audit-level=high --prefix Tooling/desk

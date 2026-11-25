@@ -1,0 +1,13 @@
+{
+  "_about": "The gate's brand rules, as data: what scripts/gate_lint.py and scripts/announce_check.py hold a text to for this stream, read through scripts/memory.py (load_gate_rules). A shape with no content until the brand writes its status.md: the lists ship empty and the status pass then finds nothing. A person edits it on a decision; /corpus-update may tighten it (add a pattern, never remove one). A file that does not parse, or a pattern that is not a regular expression, blocks the gate: it is never read around. Another stream keeps its own under streams/<slug>/gate-rules.json and never borrows this one.",
+  "_status_words_about": "Words or forms status.md forbids in public copy because they claim a certification, an accreditation, a go-live or a capability the brand does not have yet. Each is {\"pattern\": a regular expression matched case-insensitively, \"fix\": the cleared form to use instead}. A match blocks.",
+  "status_words": [],
+  "_cleared_hedges_about": "The cleared forms approved copy already carries, as plain phrases. They are masked before the status scan, so the hedge passes and an upgrade of it does not.",
+  "cleared_hedges": [],
+  "_capability_verbs_about": "The present-tense verbs that make '<brand> or we' + verb a capability sentence, as regular-expression alternatives. Such a sentence needs a cite at grade evidenced.",
+  "capability_verbs": ["runs?", "operates?", "issues?", "provides?", "settles?", "checks?", "enforces?", "prevents?", "offers?", "delivers?", "verif(?:y|ies)", "processes", "hosts?", "secures?", "connects?", "certif(?:y|ies)", "guarantees?"],
+  "_house_style_about": "House style, as switches. hook_words: the word range of a title and a teaser's first line. what_we_do_not_claim: the post must carry its honest limit. tag_line: each teaser carries the theme hashtag and no other hashtag appears. false switches a check off for this stream. retired: the house-style checks (hook, tag line, cta, shape) a person hands from the code to the reviewers, as advice that never blocks; the code stops checking one only while the last gate evaluation (engine.py eval gate --live) shows the reviewers caught every labelled case of it.",
+  "house_style": {"hook_words": {"min": 6, "max": 17}, "what_we_do_not_claim": true, "tag_line": true, "retired": []},
+  "_announce_about": "The announcement check. status_flags: operating claims status.md does not carry, each {\"pattern\", \"why\"}. cleared_phrases: wording approved releases already carry, as regular expressions, never flagged again. voice_flags: vocabulary that belongs to another stream's voice, each {\"pattern\", \"why\"}.",
+  "announce": {"status_flags": [], "cleared_phrases": [], "voice_flags": []}
+}

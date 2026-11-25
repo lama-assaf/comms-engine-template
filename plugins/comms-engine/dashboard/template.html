@@ -1,0 +1,393 @@
+<meta charset="utf-8">
+<title>__BRAND_NAME__ Comms</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Two things, in this order: the posts, and what is live right now with the replies drafted
+   for it. Every card shows the content itself; the reasons behind it sit behind Read more.
+   Read-only: a post is approved, edited or held on the desk, never here. */
+:root {
+  --bg: #f3f5f7; --surface: #ffffff; --ink: #172028; --muted: #5d6c7b; --line: #d7dee5; --soft: #e8edf1;
+  --accent: #0f6f74; --accent-ink: #ffffff; --accent-soft: #d8ecec;
+  --good: #27784d; --warn: #a86400; --crit: #b3261e; --hold: #5a4fae; --dim: #93a0ac;
+  --good-soft: #dcefe3; --warn-soft: #f7e8cf; --crit-soft: #f6dcd9; --hold-soft: #e4e0f6;
+  --display: "Archivo Narrow", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  --shadow: 0 12px 40px rgba(23, 32, 40, .18);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f141a; --surface: #161d25; --ink: #e5ebf0; --muted: #8e9cab; --line: #273240; --soft: #1e2933;
+  --accent: #52b9be; --accent-ink: #07272a; --accent-soft: #15383b;
+  --good: #5fc48d; --warn: #e3a63c; --crit: #f0706a; --hold: #ab9ff2; --dim: #5f6d7b;
+  --good-soft: #163726; --warn-soft: #3b2c0e; --crit-soft: #3f1a18; --hold-soft: #2a2550;
+  --shadow: 0 12px 40px rgba(0, 0, 0, .55); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f141a; --surface: #161d25; --ink: #e5ebf0; --muted: #8e9cab; --line: #273240; --soft: #1e2933;
+  --accent: #52b9be; --accent-ink: #07272a; --accent-soft: #15383b;
+  --good: #5fc48d; --warn: #e3a63c; --crit: #f0706a; --hold: #ab9ff2; --dim: #5f6d7b;
+  --good-soft: #163726; --warn-soft: #3b2c0e; --crit-soft: #3f1a18; --hold-soft: #2a2550;
+  --shadow: 0 12px 40px rgba(0, 0, 0, .55); color-scheme: dark }
+
+* { box-sizing: border-box }
+html { height: 100% }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); -webkit-text-size-adjust: 100%; min-height: 100% }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface) }
+a { color: var(--accent) }
+button { font: inherit; color: inherit }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: .005em; margin: 0; text-wrap: balance }
+.wrap { max-width: 860px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)) }
+.num { font-variant-numeric: tabular-nums }
+
+/* the bar: brand, what waits on you, when the page was last refreshed */
+.pulse { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line) }
+.pulse .wrap { display: flex; align-items: center; gap: 14px; min-height: 54px; padding-block: 8px; flex-wrap: wrap }
+.pulse h1 { font-size: 22px; line-height: 1 }
+.facts { display: flex; gap: 6px 14px; flex-wrap: wrap; color: var(--muted); font-size: 14px; min-width: 0 }
+.facts b { color: var(--ink); font-weight: 600 }
+.facts .owe { color: var(--warn); font-weight: 600 } .facts .owe.zero { color: var(--good) }
+.built { margin-left: auto; color: var(--dim); font-size: 12.5px }
+
+main.wrap { padding-block: 24px 60px; display: grid; gap: 36px }
+section > header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; flex-wrap: wrap }
+section > header h2 { font-size: 24px }
+section > header .count { font-family: var(--mono); font-size: 13px; color: var(--muted) }
+section > header .hint { margin-left: auto; color: var(--dim); font-size: 13px }
+.empty { color: var(--muted); padding: 16px 18px; background: var(--surface); border: 1px dashed var(--line); border-radius: 8px }
+.sub { font-family: var(--display); font-size: 13px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); font-weight: 600; margin: 22px 0 8px; display: flex; gap: 10px; align-items: baseline }
+.sub .count { font-family: var(--mono); text-transform: none; letter-spacing: 0; font-weight: 400 }
+
+/* filters: which posts to show */
+.filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px }
+.filters button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: 13.5px; color: var(--muted) }
+.filters button.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft) }
+.filters button b { font-weight: 600; font-family: var(--mono); font-size: 12px; margin-left: 4px }
+
+/* cards: one per post, reply or thing heard. the content shows; Read more opens the reasons */
+.cards { display: grid; gap: 10px }
+.card { display: grid; gap: 8px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; text-align: left; width: 100%; cursor: pointer; position: relative; min-width: 0 }
+.card:hover, .card:focus-visible { border-color: var(--accent); outline: none; box-shadow: 0 0 0 2px var(--accent-soft) }
+.card .top { display: flex; gap: 6px 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted) }
+.card .top .when { font-family: var(--display); font-weight: 600; color: var(--ink); font-size: 14px }
+.card h3 { font-size: 19px; line-height: 1.25; font-weight: 600 }
+.card.reply h3, .card.heard h3 { font-size: 16px; font-family: var(--body); color: var(--muted); font-weight: 400; text-wrap: pretty }
+.card p { margin: 0; color: var(--ink); font-size: 15px; max-width: 70ch }
+.card p.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--muted) }
+.card p.clamp3 { -webkit-line-clamp: 3 }
+.card .say { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 15px; line-height: 1.5 }
+.card .foot { display: flex; gap: 8px 14px; align-items: center; flex-wrap: wrap; font-size: 13.5px; color: var(--muted) }
+.card .foot .read { margin-left: auto; color: var(--accent); font-weight: 600; font-size: 14px }
+.card .foot .read::after { content: " ›" }
+.card .foot a { text-decoration: none; font-weight: 600 }
+.status { font-family: var(--display); font-size: 12.5px; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--soft); color: var(--muted); white-space: nowrap }
+.status.warn { background: var(--warn-soft); color: var(--warn) } .status.good { background: var(--good-soft); color: var(--good) } .status.crit { background: var(--crit-soft); color: var(--crit) } .status.hold { background: var(--hold-soft); color: var(--hold) }
+.chip { font-family: var(--display); font-size: 12.5px; letter-spacing: .03em; padding: 2px 9px; border-radius: 999px; background: var(--soft); color: var(--muted); white-space: nowrap; font-weight: 600 }
+.chip.accent { background: var(--accent-soft); color: var(--accent) } .chip.good { background: var(--good-soft); color: var(--good) } .chip.warn { background: var(--warn-soft); color: var(--warn) } .chip.crit { background: var(--crit-soft); color: var(--crit) }
+.card.waiting { border-left: 4px solid var(--warn) } .card.crit { border-left: 4px solid var(--crit) } .card.live { border-left: 4px solid var(--good) } .card.hold { border-left: 4px solid var(--hold) }
+.copy { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 3px 10px; cursor: pointer; font-family: var(--display); font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em }
+.copy:hover { border-color: var(--accent); color: var(--accent) } .copy.ok { border-color: var(--good); color: var(--good) }
+.more { justify-self: start; background: none; border: 0; color: var(--accent); cursor: pointer; padding: 6px 0; font-size: 14px }
+
+/* setup: the path from clone to the first post, shown only until it is walked */
+.setup { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden }
+.setup .top { display: flex; align-items: center; gap: 16px; padding: 16px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap }
+.setup .top h2 { font-size: 22px }
+.setup .top p { margin: 0; color: var(--muted); flex: 1 1 260px; min-width: 0 }
+.progress { display: flex; gap: 4px; flex: none }
+.progress i { width: 26px; height: 6px; border-radius: 3px; background: var(--soft) }
+.progress i.done { background: var(--accent) } .progress i.cur { background: var(--warn) }
+.steps { list-style: none; margin: 0; padding: 0 }
+.step { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 0 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); cursor: pointer; align-items: start }
+.step:last-child { border-bottom: 0 }
+.step:hover, .step:focus-visible { background: var(--soft); outline: none }
+.step .n { font-family: var(--display); font-size: 15px; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; color: var(--muted); font-weight: 600 }
+.step.done .n { background: var(--accent); border-color: var(--accent); color: var(--accent-ink) }
+.step.cur .n { border-color: var(--warn); color: var(--warn) }
+.step .t { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap } .step .t b { font-weight: 600 }
+.step.done .t b { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--dim) }
+.step .t .opt { font-size: 12px; color: var(--dim); font-family: var(--display); text-transform: uppercase; letter-spacing: .08em }
+.step .d { grid-column: 2; color: var(--muted); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.step.cur .d { color: var(--ink) } .step.later { opacity: .72 }
+.cmd { grid-column: 2; margin-top: 10px; display: flex; gap: 8px; align-items: stretch; min-width: 0 }
+.cmd code { flex: 1 1 auto; min-width: 0; overflow-x: auto; white-space: nowrap; font: 13px/1.5 var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 9px 12px; color: var(--ink) }
+.chat { grid-column: 2; color: var(--muted); font-size: 13px; margin-top: 6px }
+.chat code { font-family: var(--mono); font-size: 12px; background: var(--soft); padding: 1px 6px; border-radius: 4px }
+
+footer.wrap { color: var(--dim); font-size: 12.5px; padding-block: 0 40px; display: grid; gap: 4px }
+
+/* the drawer: the whole thing, then the reasons */
+.scrim { position: fixed; inset: 0; background: rgba(10, 14, 18, .45); z-index: 20 }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(600px, 100%); background: var(--surface); z-index: 21; overflow-y: auto; box-shadow: var(--shadow); padding: 22px max(22px, env(safe-area-inset-right, 0px)) 40px 22px; padding-top: calc(22px + env(safe-area-inset-top, 0px)) }
+.drawer .close { position: sticky; top: 0; float: right; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; width: 32px; height: 32px; cursor: pointer; font-size: 18px; line-height: 1 }
+.drawer .kind { color: var(--muted); font-size: 13px; margin-bottom: 6px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.drawer h2 { font-size: 23px; margin: 0 0 12px; max-width: 32ch; line-height: 1.25 }
+.drawer h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 22px 0 8px; display: flex; gap: 10px; align-items: center }
+.drawer .note { background: var(--warn-soft); border-left: 3px solid var(--warn); padding: 10px 12px; border-radius: 4px; font-size: 14px; margin-bottom: 12px }
+.drawer .note.crit { background: var(--crit-soft); border-left-color: var(--crit) } .drawer .note.good { background: var(--good-soft); border-left-color: var(--good) } .drawer .note.hold { background: var(--hold-soft); border-left-color: var(--hold) }
+.drawer .prose, .drawer .box { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.55 }
+.drawer .box { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px }
+.drawer .box .lbl { display: flex; align-items: center; gap: 8px; font-family: var(--display); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px } .drawer .box .lbl .copy { margin-left: auto }
+.drawer ul { margin: 0; padding-left: 18px; font-size: 14.5px } .drawer li { margin: 4px 0 } .drawer li q { color: var(--muted) }
+.drawer li.crit { color: var(--crit) } .drawer li.warn { color: var(--warn) }
+.kvs { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px 14px; font-size: 14.5px; margin: 0 }
+.kvs dt { color: var(--muted); margin: 0 } .kvs dd { margin: 0; min-width: 0; overflow-wrap: anywhere }
+details.why { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 6px }
+details.why > summary { list-style: none; cursor: pointer; display: flex; gap: 10px; align-items: center; padding: 8px 0; font-family: var(--display); font-weight: 600; font-size: 16px }
+details.why > summary::-webkit-details-marker { display: none }
+details.why > summary::after { content: "show"; margin-left: auto; color: var(--accent); font-size: 13px; font-weight: 400; font-family: var(--body) }
+details.why[open] > summary::after { content: "hide" }
+.drawer .cmd { grid-column: auto; margin-top: 6px }
+.drawer a.go { display: inline-block; font-weight: 600; text-decoration: none; border: 1px solid var(--accent); border-radius: 6px; padding: 6px 12px; margin: 4px 0 }
+@media (max-width: 640px) {
+  .pulse .wrap { gap: 6px 12px } .built { display: none }
+  .card { padding: 14px } .card h3 { font-size: 17.5px }
+  .drawer { top: auto; max-height: 90vh; width: 100%; border-radius: 12px 12px 0 0; padding-top: 16px; padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)) }
+}
+@media (prefers-reduced-motion: no-preference) { .drawer { animation: in .18s ease-out } @keyframes in { from { transform: translateX(12px); opacity: 0 } } }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px }
+</style>
+
+<header class="pulse"><div class="wrap">
+  <h1>__BRAND_NAME__</h1>
+  <div id="facts" class="facts"></div>
+  <span id="built" class="built"></span>
+</div></header>
+
+<main class="wrap">
+  <section id="setup" hidden></section>
+  <section id="posts-sec"><header><h2>Posts</h2><span id="posts-count" class="count"></span><span class="hint">approve, edit or hold on the desk; this page shows</span></header><div id="filters" class="filters"></div><div id="posts" class="cards"></div></section>
+  <section id="live-sec"><header><h2>Live</h2><span id="live-count" class="count"></span><span class="hint">what is being said, and the replies drafted for it</span></header><div id="live"></div></section>
+</main>
+<footer class="wrap">
+  <span>Every send goes through channels.send() and its checks. A post goes out on its scheduled date; a reply or comment on a person's approve-and-send.</span>
+  <span>Every decision is made and recorded on the desk; this page only shows what stands.</span>
+</footer>
+
+<div id="scrim" class="scrim" hidden></div>
+<aside id="drawer" class="drawer" hidden aria-label="detail" role="dialog"></aside>
+
+<script>
+const STATE = /*__STATE__*/null;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtDate = iso => { try { return new Date(iso).toLocaleString(undefined, {dateStyle: "medium", timeStyle: "short"}); } catch { return iso; } };
+const fmtDay = key => { try { const d = new Date(String(key).slice(0, 10) + "T12:00:00"); return isNaN(d) ? key : d.toLocaleDateString(undefined, {weekday: "short", day: "numeric", month: "short"}); } catch { return key; } };
+const fmtShort = iso => { try { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleDateString(undefined, {day: "numeric", month: "short"}); } catch { return ""; } };
+const ago = iso => { const s = (Date.now() - new Date(iso)) / 1000; if (!isFinite(s)) return ""; if (s < 90) return "just now"; if (s < 5400) return Math.round(s / 60) + " min ago"; if (s < 129600) return Math.round(s / 3600) + " h ago"; return Math.round(s / 86400) + " d ago"; };
+const CHANNEL = {Blog: "Blog", LinkedIn: "LinkedIn", X: "X"};
+
+const Q = STATE.queue || [], S = STATE.signals || {}, F = S.findings || [], P = (STATE.engagement || {}).proposals || [];
+const SETUP = STATE.setup || {complete: true, steps: []}, CLAIMS = (STATE.claims_review || {}).items || [];
+const decisions = STATE.decisions || {}, edits = STATE.edits || {}, argline = STATE.arguments || {};
+const statusOf = item => decisions[item.id]?.status || item.alpha_status || "proposed";
+const proposalId = p => "C-" + p.finding_id + "-" + (p.author || "").replace(/[^A-Za-z0-9_]/g, "");
+const EDIT_FIELDS = ["title", "post", "teaser_linkedin", "teaser_x"], HASH_FIELDS = ["post", "teaser_linkedin", "teaser_x", "title"];
+const rendered = item => Object.fromEntries(EDIT_FIELDS.map(f => [f, String(item[f] ?? "")]));
+
+/* Where a saved edit stands against the note as this page was built: the same
+   three-way test scripts/apply_edits.py makes. pending applies cleanly; conflict
+   means the note moved after the edit was saved and nothing is written either way. */
+const noteHash = {};
+const editState = item => {
+  const e = edits[item.id]; if (!e) return null;
+  const de = item.desk_edit || {};
+  if (de.edited_at && e.at && de.edited_at === e.at) return de.resolution === "vault" ? "dropped" : "applied";
+  const h = noteHash[item.id]; if (h === undefined) return "checking";
+  return h === e.base_hash ? "pending" : "conflict";
+};
+const view = item => { const e = edits[item.id], r = rendered(item); return (e && editState(item) !== "dropped") ? Object.fromEntries(EDIT_FIELDS.map(f => [f, String(e[f] ?? r[f])])) : r; };
+const argCurrent = item => { const a = argline[item.id]; return !!a && a.hook === view(item).title; };
+const K256 = new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+function sha256Hex(bytes) {
+  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+  const h = new Uint32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]);
+  const len = bytes.length, padded = new Uint8Array((len + 9 + 63) & ~63);
+  padded.set(bytes); padded[len] = 0x80;
+  const dv = new DataView(padded.buffer), bits = len * 8;
+  dv.setUint32(padded.length - 8, Math.floor(bits / 4294967296)); dv.setUint32(padded.length - 4, bits >>> 0);
+  const w = new Uint32Array(64);
+  for (let i = 0; i < padded.length; i += 64) {
+    for (let t = 0; t < 16; t++) w[t] = dv.getUint32(i + t * 4);
+    for (let t = 16; t < 64; t++) { const x = w[t - 15], y = w[t - 2]; w[t] = (w[t - 16] + (rotr(x, 7) ^ rotr(x, 18) ^ (x >>> 3)) + w[t - 7] + (rotr(y, 17) ^ rotr(y, 19) ^ (y >>> 10))) >>> 0; }
+    let a = h[0], b = h[1], c = h[2], d = h[3], e = h[4], f = h[5], g = h[6], hh = h[7];
+    for (let t = 0; t < 64; t++) {
+      const t1 = (hh + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K256[t] + w[t]) >>> 0;
+      const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0;
+      hh = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+    }
+    h[0] += a; h[1] += b; h[2] += c; h[3] += d; h[4] += e; h[5] += f; h[6] += g; h[7] += hh;
+  }
+  return Array.from(h, x => x.toString(16).padStart(8, "0")).join("");
+}
+function hashNotes() { const enc = new TextEncoder(); Q.forEach(i => { if (edits[i.id]) { const r = rendered(i); noteHash[i.id] = sha256Hex(enc.encode(HASH_FIELDS.map(f => r[f]).join("\u001f"))); } }); }
+
+/* ---------- posts ---------- */
+/* The state of a post in plain words. One label, one colour, one filter bucket. */
+const firstBlock = i => { const c = (i.gate?.checks || []).find(c => c.result === "block"); return c ? (c.check.replace(/^lint:\s*/, "") + ": “" + (c.line || "").slice(0, 140) + "”") : ""; };
+function standing(i) {
+  const st = statusOf(i), g = (i.gate || {}).verdict, es = editState(i), live = (i.published_to || []).length;
+  if (live) return {key: "live", label: "live", cls: "good", card: "live", note: "Live on " + i.published_to.join(", ") + "."};
+  if (es === "conflict") return {key: "waiting", label: "your edit needs a decision", cls: "crit", card: "crit", note: "Your edit and the post diverged after you saved it. Nothing was written. On the desk, pick which version stands."};
+  if (g === "block") return {key: "waiting", label: "needs a fix", cls: "crit", card: "crit", note: "A check stopped it. " + (firstBlock(i) || "See the checks below.")};
+  if (st === "proposed" && !argCurrent(i)) return {key: "waiting", label: "waiting for you", cls: "warn", card: "waiting", note: "Confirm or rewrite the hook and the claim on the desk, then approve."};
+  if (st === "proposed") return {key: "waiting", label: "ready to approve", cls: "warn", card: "waiting", note: "Hook and claim confirmed. Approving writes the post into the calendar."};
+  if (st === "approved") return {key: "approved", label: "approved", cls: "good", card: "", note: "Approved. It goes out by a person's hand on its date."};
+  return {key: "other", label: st, cls: st === "held" ? "hold" : "", card: st === "held" ? "hold" : "", note: ""};
+}
+const excerpt = i => { const v = view(i); return String(i.excerpt || v.post || "").replace(/\s+/g, " ").trim().slice(0, 260); };
+const FILTERS = [["all", "All"], ["waiting", "Waiting for you"], ["approved", "Approved"], ["live", "Live"], ["other", "Held"]];
+let filter = "all";
+const postCard = i => { const s = standing(i), v = view(i), slot = i.slot || {};
+  return `<article class="card post ${s.card}" data-open="${esc(i.id)}" tabindex="0"><div class="top"><span class="when">${esc(fmtDay(slot.date))}</span><span class="chip accent">${esc(CHANNEL[slot.platform] || slot.platform || "")}</span><span class="chip">${esc(i.theme || "")}</span><span class="status ${s.cls}" style="margin-left:auto">${esc(s.label)}</span></div><h3>${esc(v.title)}</h3><p class="clamp">${esc(excerpt(i))}</p><div class="foot"><span>${esc(i.type || "")}${i.format ? " · " + esc(i.format) : ""}</span><span class="read">Read more</span></div></article>`; };
+const claimCard = r => `<article class="card post crit" data-open="claims:${esc(r.id)}" tabindex="0"><div class="top"><span class="when">live</span><span class="chip">${esc(r.standing || "")}</span><span class="status crit" style="margin-left:auto">a fact it cites changed</span></div><h3>${esc(r.title)}</h3><p class="clamp">${esc((r.reasons || []).map(x => x.detail).join(" "))}</p><div class="foot"><span>published piece</span><span class="read">Read more</span></div></article>`;
+function renderPosts() {
+  const sorted = [...Q].sort((a, b) => String((a.slot || {}).date || "").localeCompare(String((b.slot || {}).date || "")));
+  const counts = {all: sorted.length + CLAIMS.length}; sorted.forEach(i => { const k = standing(i).key; counts[k] = (counts[k] || 0) + 1; }); if (CLAIMS.length) counts.waiting = (counts.waiting || 0) + CLAIMS.length;
+  $("#posts-count").textContent = counts.all || "";
+  $("#filters").innerHTML = counts.all ? FILTERS.filter(([k]) => k === "all" || counts[k]).map(([k, t]) => `<button class="${filter === k ? "on" : ""}" data-filter="${k}">${t}<b class="num">${counts[k] || 0}</b></button>`).join("") : "";
+  $("#filters").querySelectorAll("[data-filter]").forEach(b => b.addEventListener("click", () => { filter = b.dataset.filter; renderPosts(); bindOpen(); }));
+  const shown = sorted.filter(i => filter === "all" || standing(i).key === filter);
+  const claims = (filter === "all" || filter === "waiting") ? CLAIMS.map(claimCard).join("") : "";
+  $("#posts").innerHTML = (claims + shown.map(postCard).join("")) || `<div class="empty">${counts.all ? "Nothing under this filter." : (SETUP.complete ? "No posts yet. The first drafts appear here after the next pass." : "No posts yet. They appear here once the steps above are walked.")}</div>`;
+}
+
+/* ---------- live ---------- */
+const heldItems = () => Object.entries(S.handed_on || {}).filter(([k]) => /hold for review/.test(k)).flatMap(([, v]) => Array.isArray(v) ? v : []);
+const openReplies = () => P.filter(p => (decisions[proposalId(p)]?.status || "proposed") === "proposed");
+const whereTo = p => (p.platform === "X" ? "Reply on X" : p.platform ? "Comment on " + p.platform : "Reply");
+/* What was done with a thing heard: the hand-on list names the finding at the start of each line. */
+const fateOf = f => { const out = []; Object.entries(S.handed_on || {}).forEach(([k, v]) => { if (!Array.isArray(v)) return; v.forEach(line => { if (new RegExp("^" + f.id + "\\b").test(String(line))) out.push({how: /hold for review/.test(k) ? "held for you" : /theme-post|writer/.test(k) ? "feeds a post" : /engagement|comment/.test(k) ? "a reply is drafted" : "noted only", line: String(line)}); }); }); return out; };
+const qLinks = text => esc(text).replace(/Q-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9]+-[0-9]+/g, m => Q.some(i => i.id === m) ? `<a href="#" data-open="${m}">${esc(view(Q.find(i => i.id === m)).title)}</a>` : m);
+const sentimentChip = f => f.sentiment && f.sentiment !== "neutral" ? `<span class="chip ${f.sentiment === "negative" ? "warn" : "good"}">${esc(f.sentiment)}</span>` : "";
+const warm = () => (((S.warmest_themes || {}).ranked) || []).slice(0, 3);
+let heardAll = false;
+function renderLive() {
+  const el = $("#live"), replies = openReplies(), held = heldItems(), heard = [...F].sort((a, b) => (b.relevance || 0) - (a.relevance || 0)), w = S.window || {};
+  $("#live-count").textContent = w.to ? "heard " + ago(w.to) : "";
+  if (!replies.length && !held.length && !heard.length && !S.summary) { el.innerHTML = `<div class="empty">Nothing heard yet. Once the listening runs, what is said about the themes lands here with the replies drafted for it.</div>`; return; }
+  let html = "";
+  if (S.summary) html += `<div class="cards"><article class="card heard" data-open="summary" tabindex="0"><div class="top"><span class="when">${esc(fmtShort(w.from))}${w.to ? " to " + esc(fmtShort(w.to)) : ""}</span>${warm().map(t => `<span class="chip">${esc(t.theme)}</span>`).join("")}<span class="status" style="margin-left:auto">in one paragraph</span></div><p class="clamp clamp3" style="color:var(--ink)">${esc(S.summary)}</p><div class="foot"><span>${esc(F.length)} things heard</span><span class="read">Read more</span></div></article></div>`;
+  html += `<div class="sub">Replies to place <span class="count num">${replies.length}</span></div>`;
+  html += replies.length ? `<div class="cards">${replies.map(p => `<article class="card reply waiting" data-open="react:${esc(proposalId(p))}" tabindex="0"><div class="top"><span class="when">${esc(whereTo(p))}</span><span class="chip">${esc(p.theme || "")}</span><span class="chip">${esc(p.tier || "")}</span><span class="status warn" style="margin-left:auto">place by hand</span></div><h3>${esc(p.target_title || p.target_post || "")}</h3><p class="say">${esc(p.draft_comment)}</p><div class="foot">${p.target_url ? `<a href="${esc(p.target_url)}" target="_blank" rel="noopener" data-stop>Open the post ↗</a>` : ""}<button class="copy" data-copy="${esc(p.draft_comment)}">copy</button><span class="read">Read more</span></div></article>`).join("")}</div>`
+    : `<div class="empty">No reply drafted this time.${(S.handed_on || {}).note ? " " + esc(String(S.handed_on.note).split(". ").slice(1).join(". ")) : ""}</div>`;
+  if (held.length) html += `<div class="sub">Held for you <span class="count num">${held.length}</span></div><div class="cards">${held.map((h, n) => `<article class="card heard hold" data-open="held:${n}" tabindex="0"><div class="top"><span class="when">decide</span><span class="status hold" style="margin-left:auto">nothing drafted until you say</span></div><p class="clamp" style="color:var(--ink)">${esc(h)}</p><div class="foot"><span class="read">Read more</span></div></article>`).join("")}</div>`;
+  if (heard.length) { const shown = heardAll ? heard : heard.slice(0, 4);
+    html += `<div class="sub">What people are saying <span class="count num">${heard.length}</span></div><div class="cards">${shown.map(f => { const fate = fateOf(f)[0]; return `<article class="card heard" data-open="heard:${esc(f.id)}" tabindex="0"><div class="top"><span class="when">${esc(f.theme || "")}</span>${sentimentChip(f)}${fate ? `<span class="chip ${fate.how === "feeds a post" ? "accent" : ""}">${esc(fate.how)}</span>` : ""}<span class="status" style="margin-left:auto">${esc(fmtShort(f.at) || "heard")}</span></div><p class="clamp clamp3" style="color:var(--ink)">${esc(f.finding)}</p><div class="foot"><span>${(f.evidence || []).length} source${(f.evidence || []).length === 1 ? "" : "s"}</span><span class="read">Read more</span></div></article>`; }).join("")}</div>`
+      + (heard.length > 4 ? `<button class="more" id="heard-more">${heardAll ? "show fewer" : "+ " + (heard.length - 4) + " more"}</button>` : ""); }
+  el.innerHTML = html;
+  const m = $("#heard-more"); if (m) m.addEventListener("click", () => { heardAll = !heardAll; renderLive(); bindOpen(); bindCopy(); });
+}
+
+/* ---------- the bar ---------- */
+function renderPulse() {
+  const waiting = Q.filter(i => standing(i).key === "waiting").length + CLAIMS.length, replies = openReplies().length, held = heldItems().length;
+  $("#facts").innerHTML = [
+    `<span class="owe ${waiting ? "" : "zero"}">${waiting ? waiting + " post" + (waiting > 1 ? "s" : "") + " waiting for you" : "no post waiting for you"}</span>`,
+    replies ? `<span><b class="num">${replies}</b> repl${replies > 1 ? "ies" : "y"} to place</span>` : "",
+    held ? `<span><b class="num">${held}</b> held for you</span>` : "",
+    !SETUP.complete ? `<span>setup <b class="num">${SETUP.done} of ${SETUP.total}</b></span>` : "",
+  ].join("");
+  $("#built").textContent = "updated " + ago(STATE.built_at);
+}
+
+/* ---------- setup ---------- */
+function renderSetup() {
+  const el = $("#setup"); if (SETUP.complete || !SETUP.steps.length) { el.hidden = true; return; }
+  el.hidden = false; const cur = SETUP.next;
+  el.innerHTML = `<div class="setup"><div class="top"><h2>Set up ${esc((STATE.brand || {}).name || "the brand")}</h2><p>${SETUP.done ? `${SETUP.done} of ${SETUP.total} done.` : "A fresh start."} Walk the steps in order. The first posts appear below once they are done.</p>
+    <span class="progress num">${SETUP.steps.filter(s => !s.optional).map(s => `<i class="${s.done ? "done" : (s.id === cur ? "cur" : "")}"></i>`).join("")}</span></div>
+    <ol class="steps">${SETUP.steps.map((s, n) => { const cls = s.done ? "done" : (s.id === cur ? "cur" : "later");
+      return `<li class="step ${cls}" data-open="step:${esc(s.id)}" tabindex="0"><span class="n num">${s.done ? "✓" : n + 1}</span><span class="t"><b>${esc(s.title)}</b>${s.optional ? `<span class="opt">optional</span>` : ""}</span><span class="d">${esc(s.detail)}</span>`
+        + (s.id === cur ? `<div class="cmd"><code>${esc(s.command)}</code><button class="copy" data-copy="${esc(s.command)}">copy</button></div>${s.chat ? `<div class="chat">or, in Claude Code: <code>${esc(s.chat)}</code></div>` : ""}` : "") + `</li>`; }).join("")}</ol></div>`;
+}
+function bindCopy(root = document) {
+  root.querySelectorAll("[data-copy]").forEach(b => { if (b.dataset.bound) return; b.dataset.bound = "1"; b.addEventListener("click", async ev => {
+    ev.stopPropagation(); const text = b.dataset.copy;
+    try { await navigator.clipboard.writeText(text); b.classList.add("ok"); b.textContent = "copied"; setTimeout(() => { b.classList.remove("ok"); b.textContent = "copy"; }, 1400); }
+    catch { const code = b.previousElementSibling; if (code) { const r = document.createRange(); r.selectNodeContents(code); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } }
+  }); });
+}
+
+/* ---------- drawer ---------- */
+const kv = pairs => `<dl class="kvs">${pairs.filter(([, v]) => v && v !== "undefined").map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join("")}</dl>`;
+const box = (label, text, copy) => `<div class="box"><div class="lbl">${esc(label)}${copy ? `<button class="copy" data-copy="${esc(text)}">copy</button>` : ""}</div>${esc(text)}</div>`;
+function openDrawer(id) {
+  const d = $("#drawer"); let html = "";
+  if (id.startsWith("step:")) html = stepHtml(SETUP.steps.find(s => s.id === id.slice(5)));
+  else if (id.startsWith("claims:")) html = claimsHtml(CLAIMS.find(r => r.id === id.slice(7)));
+  else if (id.startsWith("held:")) html = heldHtml(heldItems()[+id.slice(5)]);
+  else if (id.startsWith("react:")) html = replyHtml(P.find(p => proposalId(p) === id.slice(6)));
+  else if (id.startsWith("heard:")) html = heardHtml(F.find(f => f.id === id.slice(6)));
+  else if (id === "summary") html = summaryHtml();
+  else html = postHtml(Q.find(i => i.id === id));
+  d.innerHTML = `<button class="close" aria-label="close">×</button>` + html; d.hidden = false; $("#scrim").hidden = false;
+  $(".close", d).addEventListener("click", closeDrawer); bindCopy(d); bindOpen(d); d.scrollTop = 0; $(".close", d).focus();
+}
+function closeDrawer() { $("#drawer").hidden = true; $("#scrim").hidden = true; }
+function stepHtml(s) {
+  if (!s) return `<div class="box">not found</div>`;
+  return `<div class="kind">step${s.optional ? " · optional" : ""}</div><h2>${esc(s.title)}</h2><div class="kind"><span class="status ${s.done ? "good" : "warn"}">${s.done ? "done" : "to do"}</span></div>
+    <div class="box">${esc(s.detail)}</div><h3>Why</h3><div class="prose">${esc(s.why)}</div><h3>Command</h3><div class="cmd"><code>${esc(s.command)}</code><button class="copy" data-copy="${esc(s.command)}">copy</button></div>${s.chat ? `<div class="chat">or, in Claude Code: <code>${esc(s.chat)}</code></div>` : ""}`;
+}
+function postHtml(i) {
+  if (!i) return `<div class="box">not found</div>`;
+  const v = view(i), g = i.gate || {}, s = standing(i), d = decisions[i.id], a = argline[i.id], slot = i.slot || {}, es = editState(i);
+  const f = F.find(x => x.id === i.finding_id && x.theme === i.theme), fails = (g.checks || []).filter(c => c.result !== "pass");
+  const verdict = g.verdict === "pass" ? "Cleared." : g.verdict === "pass-with-edits" ? "Cleared with small edits." : g.verdict === "block" ? "Stopped." : "Not checked yet.";
+  return `<div class="kind"><span class="chip accent">${esc(CHANNEL[slot.platform] || slot.platform || "")}</span><span>${esc(fmtDay(slot.date))}</span><span class="chip">${esc(i.theme || "")}</span><span class="status ${s.cls}">${esc(s.label)}</span>${es && es !== "conflict" ? `<span class="chip">your edit ${esc(es)}</span>` : ""}</div><h2>${esc(v.title)}</h2>`
+    + (s.note ? `<div class="note ${s.cls}">${esc(s.note)}</div>` : "")
+    + `<div class="prose">${esc(v.post)}</div>`
+    + `<h3>Teasers</h3>${box("LinkedIn", v.teaser_linkedin, true)}${box("X", v.teaser_x, true)}` + (i.cta ? `<a class="go" href="${esc(i.cta)}" target="_blank" rel="noopener">${esc(i.cta.replace(/^https?:\/\//, ""))} ↗</a>` : "")
+    + `<details class="why"><summary>Why this post</summary>`
+    + (f ? `<h3>What was heard</h3><div class="prose">${esc(f.finding)}</div>` : "")
+    + `<h3>The argument</h3>` + kv([["shape", esc(i.format)], ["runs", esc(i.logic)], ["tests", esc(i.hypothesis)], ["answers", esc(i.query)], ["expected", esc(typeof i.predicted === "object" ? JSON.stringify(i.predicted) : i.predicted)], ["rests on", esc((i.cites || []).join(", "))], ["campaign", esc(slot.campaign)]])
+    + ((i.hooks_considered || []).length > 1 ? `<h3>Other hooks considered</h3><ul>${i.hooks_considered.filter(h => (typeof h === "string" ? h : h.hook) !== v.title).map(h => `<li>${esc(typeof h === "string" ? h : h.hook || JSON.stringify(h))}</li>`).join("")}</ul>` : "")
+    + `</details><details class="why"><summary>Checks · ${esc(verdict)}</summary>` + (g.note_for_alpha ? `<div class="box">${esc(g.note_for_alpha)}</div>` : "")
+    + (fails.length ? `<ul>${fails.map(c => `<li class="${c.result === "block" ? "crit" : "warn"}">${esc(c.check.replace(/^lint:\s*/, ""))}: ${esc(c.result)}${c.line ? ` <q>${esc(c.line.slice(0, 160))}</q>` : ""}${c.fix ? ` · ${esc(c.fix)}` : ""}</li>`).join("")}</ul>` : `<div class="prose" style="color:var(--muted)">Every check passed${g.checks ? ", " + g.checks.length + " of them" : ""}.</div>`)
+    + `</details>` + (a || d ? `<details class="why"><summary>On the desk</summary>` + (a ? kv([["hook", esc(a.hook)], ["claim", esc(a.claim)], ["act", esc(a.act) + " · " + esc(fmtDate(a.at))]]) : "") + (d ? `<h3>Decision</h3>` + kv([["status", esc(d.status)], ["note", esc(d.note)], ["when", esc(fmtDate(d.at))]]) : "") + `</details>` : "");
+}
+function replyHtml(p) {
+  if (!p) return `<div class="box">not found</div>`;
+  const f = F.find(x => x.id === p.finding_id);
+  return `<div class="kind"><span class="chip accent">${esc(whereTo(p))}</span><span class="chip">${esc(p.theme || "")}</span><span class="chip">${esc(p.tier || "")}</span>${p.risk ? `<span class="chip warn">${esc(p.risk)}</span>` : ""}</div><h2>${esc(p.target_title || p.target_post || "")}</h2>`
+    + `<div class="note">A person places this by hand. ${esc(p.timing_note || "")}</div>`
+    + box("The reply", p.draft_comment, true) + (p.target_url ? `<a class="go" href="${esc(p.target_url)}" target="_blank" rel="noopener">Open the post ↗</a>` : "")
+    + `<details class="why" open><summary>Why this reply</summary><div class="prose">${esc(p.why)}</div>` + kv([["shape", esc(p.shape)], ["pacing", esc(p.pacing)]]) + (f ? `<h3>What was heard</h3><div class="prose">${esc(f.finding)}</div>` : "") + `</details>`;
+}
+function heardHtml(f) {
+  if (!f) return `<div class="box">not found</div>`;
+  const fates = fateOf(f);
+  return `<div class="kind"><span class="chip">${esc(f.theme || "")}</span>${sentimentChip(f)}<span>${esc(fmtDate(f.at))}</span></div><h2>${esc(f.theme || "Heard")}</h2><div class="prose">${esc(f.finding)}</div>`
+    + ((f.evidence || []).length ? `<h3>Sources</h3><ul>${f.evidence.map(e => `<li>${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.title || e.url)}</a>` : esc(e.title || "")}${e.quote ? ` <q>${esc(e.quote)}</q>` : ""}</li>`).join("")}</ul>` : "")
+    + `<details class="why" open><summary>What we do with it</summary>${fates.length ? `<ul>${fates.map(x => `<li><b>${esc(x.how)}</b> · ${qLinks(x.line)}</li>`).join("")}</ul>` : `<div class="prose" style="color:var(--muted)">Noted. Nothing is drafted from it.</div>`}${f.content_note ? `<h3>As content</h3><div class="prose">${esc(f.content_note)}</div>` : ""}${f.conversation_note ? `<h3>As a conversation</h3><div class="prose">${esc(f.conversation_note)}</div>` : ""}${f.licence ? kv([["licence", esc(typeof f.licence === "object" ? JSON.stringify(f.licence) : f.licence)]]) : ""}</details>`;
+}
+function summaryHtml() {
+  const w = S.window || {}, hs = S.held_slot || {}, ranked = (S.warmest_themes || {}).ranked || [];
+  return `<div class="kind"><span>${esc(fmtDate(w.from))} to ${esc(fmtDate(w.to))}</span></div><h2>What was said, in one paragraph</h2><div class="prose">${esc(S.summary || "")}</div>`
+    + (ranked.length ? `<h3>Warmest themes</h3><ul>${ranked.map(t => `<li><b>${esc(t.theme)}</b> · ${esc(t.why || "")}</li>`).join("")}</ul>` : "")
+    + (S.mentions_note ? `<h3>Mentions</h3><div class="prose">${esc(S.mentions_note)}</div>` : "")
+    + (hs.reason ? `<details class="why"><summary>The held slot · ${hs.triggered ? "triggered" : "not triggered"}</summary><div class="prose">${esc(hs.reason)}</div></details>` : "");
+}
+function heldHtml(h) { return `<div class="kind"><span class="status hold">held for you</span></div><h2>Decide</h2><div class="prose">${qLinks(h)}</div><div class="note hold" style="margin-top:14px">Nothing is drafted from this until you say. Record the decision on the desk.</div>`; }
+function claimsHtml(r) {
+  if (!r) return `<div class="box">not found</div>`;
+  return `<div class="kind"><span class="status crit">a fact it cites changed</span><span>${esc(r.standing || "")}</span></div><h2>${esc(r.title)}</h2><div class="note crit">A fact this piece rests on has changed since it went out. Update, annotate or retire it by hand; nothing edits a published piece on its own.</div><ul>${(r.reasons || []).map(x => `<li>${esc((x.claim ? x.claim + " " : "") + x.kind + ": " + x.detail)}</li>`).join("")}</ul>`;
+}
+
+/* ---------- wiring ---------- */
+function bindOpen(root = document) {
+  root.querySelectorAll("[data-open]").forEach(x => { if (x.dataset.bound) return; x.dataset.bound = "1"; x.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); openDrawer(x.dataset.open); }); x.addEventListener("keydown", ev => { if (ev.key === "Enter" && x.tagName !== "BUTTON" && x.tagName !== "A") openDrawer(x.dataset.open); }); });
+  root.querySelectorAll("[data-stop]").forEach(a => { if (!a.dataset.bound) { a.dataset.bound = "1"; a.addEventListener("click", ev => ev.stopPropagation()); } });
+}
+function renderAll() { renderPulse(); renderSetup(); renderPosts(); renderLive(); bindOpen(); bindCopy(); }
+$("#scrim").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && !$("#drawer").hidden) return closeDrawer();
+  if (ev.target.matches("input, textarea") || !$("#drawer").hidden) return;
+  if (ev.key === "j" || ev.key === "k") { const all = [...document.querySelectorAll("main [data-open]")].filter(e => e.offsetParent !== null); let n = all.indexOf(document.activeElement); n = ev.key === "j" ? Math.min(n + 1, all.length - 1) : Math.max(n - 1, 0); if (all[n]) { all[n].focus(); all[n].scrollIntoView({block: "nearest"}); } ev.preventDefault(); }
+});
+renderAll();
+hashNotes(); renderPosts(); renderPulse(); bindOpen();
+</script>
