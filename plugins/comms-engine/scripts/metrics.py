@@ -2,8 +2,8 @@
 """
 metrics.py - the scorecard rows (plan v2, item A10).
 
-`state/metrics.json` per stream, beside the twelve key results of the
-communications principles (three objectives, four each; KEY_RESULTS below):
+`state/metrics.json` per stream, beside twelve example key results
+(three objectives, four each; KEY_RESULTS below, to be replaced per business):
 
   engagement index    mean index of the stream's scored records (score over
                       the stream's own baseline); "partial" while any record
@@ -44,19 +44,21 @@ VARIETY_WINDOW = 12
 CORRELATION_MIN = 5
 BAND_RANK = {"below": 0, "baseline": 1, "above": 2}
 
+# Example key results: three objectives, four each. They are placeholders that
+# show the shape; a business replaces them with its own.
 KEY_RESULTS = [
-    ("Facts for trust", "Two releases per week published on the brand's own site ahead of any other channel"),
-    ("Facts for trust", "Every release jointly authored and synchronised with the partner"),
-    ("Facts for trust", "Every release passes the dedicated approval flow; manual release only"),
-    ("Facts for trust", "Zero claims of live or deployed capability ahead of delivery"),
-    ("Themes build leadership", "Introduction post live for each of the eight theme hashtags"),
-    ("Themes build leadership", "Every theme post carries a hashtag, partner tags and a CTA to the blog"),
-    ("Themes build leadership", "Website traffic and blog reads per theme, tracked monthly"),
-    ("Themes build leadership", "Listener signals per theme: mentions, relevance, sentiment"),
-    ("Partners amplify", "Company and personal handles collected for every partner"),
-    ("Partners amplify", "Share of theme posts reposted or followed by tagged partners"),
-    ("Partners amplify", "Third-party mentions and event panels assigned to a theme"),
-    ("Partners amplify", "New partners joining, communicated as evidence of the architecture"),
+    ("Facts first", "Every announcement is published on the business's own site before any other channel"),
+    ("Facts first", "Every claim in a post traces to the claims register or a cited primary source"),
+    ("Facts first", "Every post passes the approval flow; a person releases it"),
+    ("Facts first", "Zero claims of live or deployed capability ahead of delivery"),
+    ("Themes people follow", "An introduction post is live for each theme"),
+    ("Themes people follow", "Every theme post carries its theme tag and one clear next step"),
+    ("Themes people follow", "Site visits and article reads per theme, tracked monthly"),
+    ("Themes people follow", "Listening signals per theme: mentions, relevance, sentiment"),
+    ("Others carry it", "Handles collected for every account the business may tag"),
+    ("Others carry it", "Share of theme posts reposted or followed by tagged accounts"),
+    ("Others carry it", "Outside mentions and event talks assigned to a theme"),
+    ("Others carry it", "New relationships are announced only once both sides have confirmed"),
 ]
 
 

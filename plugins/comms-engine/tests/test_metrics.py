@@ -5,7 +5,7 @@ The scorecard rows (plan v2, item A10).
   is blank, not zero, before five pairs; reach is context unless the registry
   row opts in; the variety row counts distinct formats, logics and openers
 - the Spearman rank correlation is right on known pairs
-- the twelve key results from Principles s6 travel with the rows
+- the twelve example key results travel with the rows
 """
 import datetime as dt
 import os
